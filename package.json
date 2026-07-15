@@ -1,0 +1,10 @@
+{
+  "name": "lmp-jira-skills",
+  "version": "1.0.0",
+  "description": "Installer for the LMP Jira/QA workflow skills (Claude Code + Cursor)",
+  "private": true,
+  "bin": {
+    "lmp-jira-skills": "./install.js"
+  },
+  "license": "UNLICENSED"
+}
