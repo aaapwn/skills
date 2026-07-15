@@ -15,10 +15,10 @@ Two hard rules:
 
 ## Personal test workspace
 
-All Playwright code lives in one standalone project, reused across every ticket:
+All Playwright code lives in one standalone project, reused across every ticket. Resolve `{Playwright workspace}` first: check `~/.lmp-skills/config.json` for a `playwrightWorkspace` field and use it if present. Otherwise, use `~/Desktop/LMP/CSS/jera-css-playwright` if it exists, or ask the user once where their Playwright workspace is (or should be created) if it doesn't — either way, save the resolved path into `~/.lmp-skills/config.json` under `playwrightWorkspace` (create the file/folder if needed) so future runs read the cache instead of asking again:
 
 ```
-{{PLAYWRIGHT_WORKSPACE}}/
+{Playwright workspace}/
 ├── package.json          # playwright + @playwright/test เท่านั้น
 ├── playwright.config.ts  # baseURL ชี้ localhost ของแอปที่เทส
 ├── auth/                 # storageState ราย role (gitignore ถ้า workspace เป็น git)
@@ -51,7 +51,7 @@ Tier 3 (Claude in Chrome) is unaffected — it uses the user's real Chrome, alre
 ## Phase 1: Gather sources
 
 1. **Identify the task ID** (e.g. `LMP-4827`) from the conversation or the skill argument.
-2. **Read the ticket folder** `{{VAULT_ROOT}}/tickets/{TASK-ID}/`:
+2. **Read the ticket folder.** Resolve `{vault root}` first: check `~/.lmp-skills/config.json` for a `vaultRoot` field and use it if present. Otherwise, use `~/Desktop/LMP/lmp-task-prd` if it exists, or ask the user once where their vault is if it doesn't — either way, save the resolved path into `~/.lmp-skills/config.json` under `vaultRoot` (create the file/folder if needed) so future runs, of this skill or any other in the pipeline, read the cache instead of asking again. Read `{vault root}/tickets/{TASK-ID}/`:
    - `testing-plan.md` — the checklist to execute. If missing, stop and tell the user to run `/to-testing-plan` first.
    - `requirement.md` and `implementation-plan.md` — needed to judge expected behavior and find the API endpoints/pages under test.
 3. **Figure out how to run the app locally** (dev server command, port, seed data, env). Prefer an existing `.claude/launch.json` or project run skill. Confirm the app actually starts and is reachable before writing any test.
@@ -101,7 +101,7 @@ Start the app (dev server) first — every tier needs it running.
 
 One task gets tested multiple rounds (test → fix → re-test), so results are kept **one file per round** — never overwrite a previous round:
 
-- Folder: `{{VAULT_ROOT}}/tickets/{TASK-ID}/test-results/`
+- Folder: `{vault root}/tickets/{TASK-ID}/test-results/`
 - Filename: `round-{NN}-{YYYY-MM-DD}.md` — look at existing files in the folder to pick the next round number (first run = `round-01`)
 
 Write in Thai, technical terms in English:
@@ -139,7 +139,7 @@ Write in Thai, technical terms in English:
 
 ## Test scripts
 
-- Spec: `{{PLAYWRIGHT_WORKSPACE}}/tests/{TASK-ID}/` — รันซ้ำได้ด้วย `npx playwright test tests/{TASK-ID}` หลังแก้บัค
+- Spec: `{Playwright workspace}/tests/{TASK-ID}/` — รันซ้ำได้ด้วย `npx playwright test tests/{TASK-ID}` หลังแก้บัค
 ```
 
 Every TC in the testing plan must appear in the per-case table — passed, failed, or skipped with a reason. No silent omissions. The สถานะ column uses exactly: `✅ ผ่าน`, `❌ ไม่ผ่าน`, `⏭️ Skip` — and every ❌ must have a สาเหตุ.

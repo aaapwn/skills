@@ -11,13 +11,13 @@ This skill takes grill session data (from `/grill-jera-task`) and produces the m
 ## Phase 1: Gather sources
 
 1. **Identify the task ID** (e.g. `LMP-4827`). Take it from the current conversation, the skill argument, or ask the user for it if there is truly no trace of it — that's the only question allowed.
-2. **Load the grill data** — the primary source:
+2. **Load the grill data** — the primary source. Resolve `{vault root}` first: check `~/.lmp-skills/config.json` for a `vaultRoot` field and use it if present. Otherwise, use `~/Desktop/LMP/lmp-task-prd` if it exists, or ask the user once where their vault is if it doesn't — either way, save the resolved path into `~/.lmp-skills/config.json` under `vaultRoot` (create the file/folder if needed) so future runs, of this skill or any other in the pipeline, read the cache instead of asking again.
    - If a grill session happened earlier in this conversation, use it directly.
-   - Otherwise read `{{VAULT_ROOT}}/tickets/{TASK-ID}/grill.md`.
+   - Otherwise read `{vault root}/tickets/{TASK-ID}/grill.md`.
    - If neither exists, stop and tell the user to run `/grill-jera-task` first.
 3. **Load supporting context:**
    - The Jira ticket via Atlassian MCP (`getJiraIssue`) — summary, description, acceptance criteria, comments — unless already read in this conversation.
-   - Every other file in `{{VAULT_ROOT}}/tickets/{TASK-ID}/` (prd.md, implementation-plan.md, etc.), if the folder exists.
+   - Every other file in `{vault root}/tickets/{TASK-ID}/` (prd.md, implementation-plan.md, etc.), if the folder exists.
    - The relevant parts of the codebase, so requirements reflect how the system actually works today (existing roles/permissions, existing flows, naming). Use the codebase's real domain vocabulary throughout.
 
 ## Phase 2: Write the requirement
@@ -136,5 +136,5 @@ Section rules:
 
 ## Phase 3: Save and report
 
-1. Save the document to `{{VAULT_ROOT}}/tickets/{TASK-ID}/requirement.md`. Create the folder if it doesn't exist. If `requirement.md` already exists, overwrite it — but tell the user you replaced a previous version.
+1. Save the document to `{vault root}/tickets/{TASK-ID}/requirement.md`. Create the folder if it doesn't exist. If `requirement.md` already exists, overwrite it — but tell the user you replaced a previous version.
 2. Show the user where the file was saved, plus a short summary: how many FRs, what the notable scope cuts are, and any open questions that still need answers.

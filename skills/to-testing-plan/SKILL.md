@@ -11,7 +11,7 @@ This skill turns a requirement document into an exhaustive testing plan. The goa
 ## Phase 1: Gather sources
 
 1. **Identify the task ID** (e.g. `LMP-4827`) from the conversation or the skill argument. Ask only if there is truly no trace of it.
-2. **Read everything in the ticket folder** `{{VAULT_ROOT}}/tickets/{TASK-ID}/`:
+2. **Read everything in the ticket folder.** Resolve `{vault root}` first: check `~/.lmp-skills/config.json` for a `vaultRoot` field and use it if present. Otherwise, use `~/Desktop/LMP/lmp-task-prd` if it exists, or ask the user once where their vault is if it doesn't — either way, save the resolved path into `~/.lmp-skills/config.json` under `vaultRoot` (create the file/folder if needed) so future runs, of this skill or any other in the pipeline, read the cache instead of asking again. Read `{vault root}/tickets/{TASK-ID}/`:
    - `requirement.md` — the primary source. If it doesn't exist, stop and tell the user to run `/to-jira-requirement` first.
    - `grill.md` and every other file (prd.md, implementation-plan.md, ...) — decisions and edge cases sometimes appear here that didn't make it into the requirement; they still need test coverage.
 3. **Read the Jira ticket** via Atlassian MCP (`getJiraIssue`) if not already in context — acceptance criteria and comments often contain extra test-worthy details.
@@ -138,5 +138,5 @@ Formatting rules:
 
 ## Phase 3: Save and report
 
-1. Save to `{{VAULT_ROOT}}/tickets/{TASK-ID}/testing-plan.md`. If the file already exists, overwrite it but tell the user you replaced a previous version.
+1. Save to `{vault root}/tickets/{TASK-ID}/testing-plan.md`. If the file already exists, overwrite it but tell the user you replaced a previous version.
 2. Report to the user: total TC count, count per section, which impacted features got regression cases, and any requirement item that was hard to make testable (so they can push back on the requirement if needed).

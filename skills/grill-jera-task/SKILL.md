@@ -20,9 +20,9 @@ Check whether the user has already provided a Jira task (a ticket key like `LMP-
 Do all of the following before asking the user anything:
 
 1. **Read the Jira ticket** using the Atlassian MCP tools (`getJiraIssue`). Read the summary, description, acceptance criteria, comments, and linked issues. If the MCP call fails or the ticket is not found, tell the user and ask them to verify the task ID.
-2. **Check the Obsidian vault for prior work.** Look in `{{VAULT_ROOT}}/tickets/{TASK-ID}/`:
+2. **Check the Obsidian vault for prior work.** Resolve `{vault root}` first: check `~/.lmp-skills/config.json` for a `vaultRoot` field and use it if present. Otherwise, use `~/Desktop/LMP/lmp-task-prd` if it exists, or ask the user once where their vault is if it doesn't — either way, save the resolved path into `~/.lmp-skills/config.json` under `vaultRoot` (create the file/folder if needed) so future runs, of this skill or any other in the pipeline, read the cache instead of asking again. Look in `{vault root}/tickets/{TASK-ID}/`:
    - If the folder exists, read every file in it (prd.md, implementation-plan.md, grill.md, etc.) — this task may have been worked on before. Summarize to the user what already exists, and take it into account so you don't re-ask questions that are already answered.
-   - Also skim the vault README at `{{VAULT_ROOT}}/README.md` for conventions if you haven't before.
+   - Also skim the vault README at `{vault root}/README.md` for conventions if you haven't before.
 3. **Understand the current codebase.** Explore the parts of the codebase the ticket touches so that *facts* can be looked up instead of asked. Use subagents for broad exploration if needed.
 
 Then give the user a short brief: what the ticket asks for, what prior docs exist in the vault (if any), and which parts of the codebase are involved.
@@ -42,7 +42,7 @@ Rules:
 
 When the grill session is finished (the user confirms shared understanding, or says to wrap up), write the full Q&A transcript to the Obsidian vault:
 
-**Path:** `{{VAULT_ROOT}}/tickets/{TASK-ID}/grill.md`
+**Path:** `{vault root}/tickets/{TASK-ID}/grill.md`
 
 Create the `{TASK-ID}` folder if it doesn't exist. If a `grill.md` already exists from a previous session, append the new session under a dated heading instead of overwriting.
 

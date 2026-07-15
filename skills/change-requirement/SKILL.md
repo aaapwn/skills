@@ -17,7 +17,7 @@ When a requirement changes mid-flight, this skill makes the change land consiste
 
 Read all of these before asking any question:
 
-1. **Every file in the ticket folder** `{{VAULT_ROOT}}/tickets/{TASK-ID}/`:
+1. **Every file in the ticket folder.** Resolve `{vault root}` first: check `~/.lmp-skills/config.json` for a `vaultRoot` field and use it if present. Otherwise, use `~/Desktop/LMP/lmp-task-prd` if it exists, or ask the user once where their vault is if it doesn't — either way, save the resolved path into `~/.lmp-skills/config.json` under `vaultRoot` (create the file/folder if needed) so future runs, of this skill or any other in the pipeline, read the cache instead of asking again. Read everything in `{vault root}/tickets/{TASK-ID}/`:
    - `grill.md` — decisions already made (don't re-ask them)
    - `requirement.md`, `implementation-plan.md`, `testing-plan.md`
    - `test-results/` — the latest round tells you what already passed and may break

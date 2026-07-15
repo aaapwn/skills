@@ -11,7 +11,7 @@ This skill works like plan mode: read everything, decide how the feature will ac
 ## Phase 1: Gather sources
 
 1. **Identify the task ID** (e.g. `LMP-4827`) from the conversation or the skill argument. Ask only if there is truly no trace of it.
-2. **Read the ticket folder** `{{VAULT_ROOT}}/tickets/{TASK-ID}/`:
+2. **Read the ticket folder.** Resolve `{vault root}` first: check `~/.lmp-skills/config.json` for a `vaultRoot` field and use it if present. Otherwise, use `~/Desktop/LMP/lmp-task-prd` if it exists, or ask the user once where their vault is if it doesn't — either way, save the resolved path into `~/.lmp-skills/config.json` under `vaultRoot` (create the file/folder if needed) so future runs, of this skill or any other in the pipeline, read the cache instead of asking again. Read `{vault root}/tickets/{TASK-ID}/`:
    - `requirement.md` — what to build. If missing, stop and tell the user to run `/to-jira-requirement` first.
    - `testing-plan.md` — what the result must survive. Every TC constrains the design (error states, concurrency, limits, permissions). If missing, note it and continue, but tell the user the plan will be weaker without it.
    - `grill.md` and all other files — implementation decisions often live here.
@@ -164,5 +164,5 @@ Section rules:
 
 ## Phase 3: Save and report
 
-1. Save to `{{VAULT_ROOT}}/tickets/{TASK-ID}/implementation-plan.md`. If the file already exists, overwrite it but tell the user you replaced a previous version.
+1. Save to `{vault root}/tickets/{TASK-ID}/implementation-plan.md`. If the file already exists, overwrite it but tell the user you replaced a previous version.
 2. Report to the user: the chosen approach in 2-3 sentences, how many APIs / models / pages the plan adds or changes, any new libs, the key decisions you made on their behalf (for veto), and any TC from the testing plan that the plan can't satisfy yet.

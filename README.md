@@ -1,49 +1,109 @@
 # LMP Skills
 
-Source of truth for 6 custom Jira/QA workflow skills. Each `<skill>/SKILL.md`
-is a **template**: machine-specific paths are written as `{{VAULT_ROOT}}` and
-`{{PLAYWRIGHT_WORKSPACE}}` instead of being hard-coded, so the same source
-works on any machine.
+Skill สำหรับ workflow Jira/QA ของทีม 6 ตัว อยู่ที่ `skills/<name>/SKILL.md` แต่ละ
+ไฟล์ resolve path เฉพาะเครื่อง (root ของ vault, workspace Playwright ส่วนตัว)
+เองตอนรัน ไม่ต้องมีขั้นตอน build ตอนติดตั้ง:
 
-- `{{VAULT_ROOT}}` — root of the Obsidian vault that holds `tickets/{TASK-ID}/...`
-- `{{PLAYWRIGHT_WORKSPACE}}` — personal Playwright test workspace used by `jira-testing`
+1. เช็ค `~/.lmp-skills/config.json` ก่อน — ถ้ามี path อยู่แล้วใช้เลย จบ
+2. ถ้าไม่มี เช็ค path default (เช่น `~/Desktop/LMP/lmp-task-prd`) ถ้ามีอยู่จริงก็ใช้อันนี้
+3. ถ้าไม่มีทั้งคู่ ถามผู้ใช้ในแชทครั้งเดียว
 
-## Installing
+ไม่ว่าจะ resolve ได้จากทางไหน path นั้นจะถูกเซฟลง `~/.lmp-skills/config.json`
+ทันที ทำให้การรัน skill ครั้งต่อๆ ไป — ไม่ว่า skill ไหนในชุดนี้ — อ่านจาก cache
+แทนที่จะถามซ้ำ พูดง่ายๆ คือเพื่อนร่วมทีมที่ vault อยู่คนละที่จะถูกถามแค่ครั้งเดียว
+ตอนรัน skill ตัวแรกสุด
 
-No clone needed — run straight from the GitHub repo:
+## ติดตั้ง
 
-```bash
-npx github:<GITHUB_ORG>/<REPO>
-```
-
-(Once this folder is pushed, replace `<GITHUB_ORG>/<REPO>` with the real path, e.g. `npx github:lmwn/lmp-jira-skills`.)
-
-Or, if you already have this folder locally:
+ไม่ต้อง clone — ใช้ [vercel-labs/skills](https://github.com/vercel-labs/skills)
+ดึงและติดตั้งจาก repo ตรงๆ (ต้องมี Node ≥20):
 
 ```bash
-node install.js
+npx skills@latest add aaapwn/lmp-jira-skills
 ```
 
-Either way, the wizard asks:
-1. Which skills to install (default: all 6)
-2. What `{{VAULT_ROOT}}` and `{{PLAYWRIGHT_WORKSPACE}}` resolve to **on this machine**
-3. Where to install: Claude Code (`~/.claude/skills` and/or a project's `.claude/skills`) and/or Cursor (`~/.cursor/skills` and/or a project's `.cursor/skills`) — any combination
+เครื่องมือนี้จะเช็คว่าเครื่องมี coding agent ตัวไหนบ้าง (Claude Code, Cursor, ...)
+ให้เลือกว่าจะติดตั้ง skill ไหนใน 6 ตัว (มี description ให้ดูประกอบ) แล้วติดตั้งให้
+— default เป็นแบบ project-scoped หรือใส่ `-g` เพื่อติดตั้งแบบ global ก็ได้ ดู flag
+เพิ่มเติมได้จาก `npx skills@latest add --help` (เช่น `--all`, `--agent`, `--copy`
+แทน symlink)
 
-It renders each template with the real paths and writes the result to every
-selected location. Claude Code and Cursor both use the same `SKILL.md`
-format (frontmatter `name` + `description`, `disable-model-invocation: true`
-for manual-only skills), so one install produces byte-identical files for
-both tools.
+## Pipeline และวิธีใช้แต่ละ skill
 
-## Editing a skill
+ลำดับการใช้งานทั่วไปของ 1 Jira task:
 
-Always edit the template here (`<skill>/SKILL.md`, with `{{...}}` placeholders
-intact), never the installed copy under `~/.claude/skills` or
-`~/.cursor/skills` — those get overwritten next time `install.js` runs. After
-editing, re-run `node install.js`.
+```
+/grill-jera-task → /to-jira-requirement → /to-testing-plan → /to-implementation-plan
+        → (dev เขียนโค้ดจริง) → /jira-testing → (ถ้า requirement เปลี่ยน) /change-requirement
+```
 
-## Sharing with teammates
+### `/grill-jera-task` — จุดเริ่มต้น
 
-Point them at `npx github:<GITHUB_ORG>/<REPO>` — no clone, no local checkout.
-They answer the prompts with their own paths; nothing in the template
-assumes a specific username or folder layout.
+ให้ Jira task (ตัวอย่าง `LMP-4827` หรือ URL) ตอนเรียก skill หรือพิมพ์ในแชทก็ได้
+skill จะ:
+
+- อ่าน Jira ticket ผ่าน Atlassian MCP
+- เช็คว่ามีงานเก่าใน vault ของ task นี้อยู่แล้วหรือไม่
+- สำรวจ codebase ที่เกี่ยวข้อง
+- แล้ว "กริล" (สัมภาษณ์) ผู้ใช้ทีละคำถามจนกว่าจะเคลียร์ครบทุกมุม พร้อมคำแนะนำในแต่ละคำถาม
+
+จบแล้วเซฟ transcript คำถาม-คำตอบทั้งหมดไปที่ `{vault}/tickets/{TASK-ID}/grill.md`
+
+### `/to-jira-requirement` — สร้าง requirement
+
+รันต่อจาก grill session (ใช้ข้อมูลจาก session เดิมถ้าอยู่ในแชทเดียวกัน หรืออ่านจาก
+`grill.md` ก็ได้) แปลงเป็นเอกสาร requirement ที่ละเอียดที่สุด อ่านแล้ว QA/Dev/PM
+เข้าใจตรงกัน **ไม่มีการถามเพิ่ม** เป็นการ synthesize ล้วนๆ เซฟไปที่
+`{vault}/tickets/{TASK-ID}/requirement.md`
+
+### `/to-testing-plan` — สร้าง testing plan
+
+อ่าน `requirement.md` และ context อื่นในตั๋ว บวกสำรวจ codebase เพื่อหา
+regression case สร้าง testing plan ที่ครอบคลุมที่สุด (e2e, functional case,
+edge case, regression, permission) เน้นความครบ ไม่เน้นสั้น เซฟไปที่
+`{vault}/tickets/{TASK-ID}/testing-plan.md`
+
+### `/to-implementation-plan` — สร้างแผน implementation
+
+ทำงานคล้าย plan mode: อ่าน requirement + testing plan + สำรวจ codebase จริง
+แล้วเขียนแผนละเอียดระดับที่ dev (หรือ agent) หยิบไปทำต่อได้เลยโดยไม่ต้องมานั่ง
+ตัดสินใจเอง (API spec เต็ม, data model, sequence diagram) **ไม่ได้เขียนโค้ดจริง**
+เซฟไปที่ `{vault}/tickets/{TASK-ID}/implementation-plan.md`
+
+### `/jira-testing` — รันเทสจริง
+
+รัน `testing-plan.md` กับแอปที่รันอยู่จริง ด้วยกลยุทธ์ 3 tier: Playwright API test
+
+- Playwright E2E (ใน workspace ส่วนตัว ไม่แตะ repo งาน) และ Claude in Chrome
+  สำหรับเคสที่ต้องใช้สายตา เจอบั๊กแล้ว**บันทึกเฉยๆ ไม่แก้ให้** บันทึกผลไปที่
+  `{vault}/tickets/{TASK-ID}/test-results/round-NN-{date}.md`
+
+### `/change-requirement` — เมื่อ requirement เปลี่ยนกลางทาง
+
+บอก skill ว่าอะไรเปลี่ยน แล้ว skill จะอ่านทุกไฟล์ในตั๋ว + โค้ดที่ทำไปแล้ว หา
+blast radius ก่อน แล้วกริลเฉพาะส่วนที่เปลี่ยน จบแล้วอัปเดต requirement /
+testing-plan / implementation-plan ทุกไฟล์ที่กระทบ พร้อม change log ในตัว
+ไม่ renumber FR/TC เดิม
+
+## ถ้าไม่อยากใช้ Obsidian
+
+"vault" ในที่นี้คือแค่โฟลเดอร์เก็บไฟล์ `.md` ธรรมดา ไม่ได้ผูกกับแอป Obsidian
+จริงๆ — skill ทุกตัวแค่ Read/Write ไฟล์ markdown ตรงๆ ไม่ได้เรียกใช้ฟีเจอร์อะไร
+ของ Obsidian เลย
+
+ถ้าไม่อยากติดตั้ง Obsidian ก็ทำได้เลย แค่ตอนที่ skill ถาม (ครั้งแรกที่รัน skill
+ไหนก็ตาม) ให้ตอบเป็น path โฟลเดอร์ธรรมดาที่ไหนก็ได้ เช่น
+`~/lmp-tickets` หรือโฟลเดอร์ในโปรเจกต์ตัวเอง — skill จะสร้างโฟลเดอร์ให้เองถ้ายัง
+ไม่มี แล้วเปิดอ่าน/แก้ไฟล์ `.md` พวกนั้นด้วย text editor ธรรมดา (VS Code, `cat`,
+หรืออะไรก็ได้ที่เปิดไฟล์ markdown ได้) แทนการเปิดผ่าน Obsidian
+
+ถ้าอยากเปลี่ยน path ที่ตั้งไว้แล้ว แก้ค่า `vaultRoot` (และ/หรือ
+`playwrightWorkspace` สำหรับ `/jira-testing`) ใน `~/.lmp-skills/config.json`
+ได้ตรงๆ โดยไม่ต้องรอให้ skill ถามใหม่
+
+## แก้ไข skill
+
+แก้ที่ `skills/<name>/SKILL.md` ตรงๆ ได้เลย ไม่มีขั้นตอน build/render ใดๆ
+แต่ละไฟล์มี logic การ resolve path เขียนไว้ใน phase แรกที่ต้องใช้ path นั้น
+(หา `.lmp-skills/config.json` ในไฟล์เจอ) ถ้าจะเพิ่ม path เฉพาะเครื่องตัวใหม่
+ให้ตามแพทเทิร์นเดียวกัน อย่า hard-code path ของคนใดคนหนึ่ง
