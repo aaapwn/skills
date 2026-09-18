@@ -39,104 +39,153 @@ The plan MUST cover all of these dimensions — work through them in order and l
 Before finishing, verify:
 
 - **ทุก FR** ใน requirement มีอย่างน้อย 1 TC อ้างถึง
-- **ทุก Business Rule และทุก Edge Case** ใน requirement มีอย่างน้อย 1 TC
+- **ทุก Business Rule (`BR-xx`) และทุก Edge Case (`EC-xx`)** ใน requirement มีอย่างน้อย 1 TC
 - ถ้าข้อไหนยังไม่มี — เพิ่ม TC จนครบ ห้ามข้าม
+
+### กติกาการเขียนให้คนอ่านจริง (Readability)
+
+คนอ่านเอกสารแบบ **สแกน ไม่ได้อ่านทีละบรรทัด** — เขียนให้จับใจความได้ใน 30 วินาที แล้วค่อยเจาะ:
+
+- **เปิดหัวเอกสารด้วยกล่อง TL;DR เสมอ** (`> [!summary]`) ตอบให้ครบว่า เรื่องอะไร / ใหญ่แค่ไหน (เป็นตัวเลข) / ต้องทำอะไรต่อ
+- **ตาราง > ย่อหน้า** ทุกครั้งที่ข้อมูลขนานกัน — ถ้า bullet หน้าตาซ้ำกัน 3 ข้อขึ้นไป มันควรเป็นตาราง
+- **1 bullet = 1 บรรทัด** (ยาวสุด 2) ขึ้นต้นด้วย**คำสำคัญตัวหนา** แล้วค่อยขยาย
+- **ย่อหน้าห้ามเกิน 3 บรรทัด** เกินเมื่อไหร่แตกเป็น bullet หรือตาราง
+- **ตัวเลข/ค่าจริงใส่ backtick** เช่น `10,000 rows`, `HTTP 403` ให้ตาสะดุดตอนสแกน
+- **รายละเอียดยาวที่ไม่ได้อ่านทุกครั้ง ห่อด้วย `<details>`** — ข้างนอกสรุป 1 บรรทัด ข้างในของเต็ม (Obsidian render ได้, editor อื่นก็ยังอ่านออก)
+- **ห้ามลดเนื้อหาเพื่อให้สั้น** — ย้าย ยุบ ซ่อน จัดกลุ่ม ได้หมด แต่ข้อมูลต้องครบเท่าเดิม ที่ต้องการคือ *สั้นเมื่อมอง* ไม่ใช่ *น้อยลง*
+- **emoji ใช้เป็น marker** ของสถานะ/ระดับได้ (`🔴 Must`, `✅`, `❌`) ห้ามใช้ประดับเล่น
 
 ### Template
 
 ```markdown
 # Testing Plan — {TASK-ID} | {ชื่อฟีเจอร์}
 
-{ย่อหน้าสรุป: plan นี้ครอบคลุมอะไรบ้าง อิงจาก requirement เวอร์ชันไหน/วันไหน สภาพแวดล้อมที่ใช้เทส และข้อจำกัดที่ควรรู้}
+> [!summary] สรุป 30 วินาที
+> - **เทสอะไร:** {1 ประโยค}
+> - **จำนวนเคส:** `{total}` TC — E2E `{a}` · Functional `{b}` · Edge `{c}` · Regression `{d}` · Permission/อื่น ๆ `{e}`
+> - **ฟีเจอร์เดิมที่ต้องเฝ้า:** {ชื่อฟีเจอร์ที่ share code ด้วย}
+> - **เทสบน:** {environment} · อิง requirement ณ `{YYYY-MM-DD}`
+> - **ต้องเตรียมก่อน:** {account/role + data ตั้งต้น แบบสั้นที่สุด}
 
 ## ข้อมูลเตรียมก่อนเทส (Preconditions)
 
-- {บัญชีผู้ใช้/role ที่ต้องมี, ข้อมูลตั้งต้น, feature flag, environment ที่ใช้}
+| สิ่งที่ต้องมี | รายละเอียด |
+|---|---|
+| Account | {role + สิทธิ์ที่ต้องมี} |
+| ข้อมูลตั้งต้น | {seed data ที่ต้องมีในระบบ} |
+| Config | {feature flag / env} |
 
 ## รายการทดสอบ
 
-### E2E Flow
+### 1. E2E Flow `{a}` เคส
 
-- **TC-01** {ชื่อเคส — flow เต็มของ actor หลัก} `[FR-01, FR-02]`
-  - คาดหวัง: {ผลลัพธ์ที่ต้องเห็น}
-- **TC-02** ...
+| TC | เทสอะไร | คาดหวัง | อ้างอิง |
+|---|---|---|---|
+| TC-01 | {flow เต็มของ actor หลัก ตั้งแต่ต้นจนจบ} | {ผลลัพธ์ที่ต้องเห็น} | FR-01, FR-02 |
 
-### Functional Cases
+### 2. Functional Cases `{b}` เคส
 
-- **TC-05** {เคสย่อยรายพฤติกรรม} `[FR-03]`
-- ...
+| TC | เทสอะไร | คาดหวัง | อ้างอิง |
+|---|---|---|---|
+| TC-05 | {พฤติกรรมย่อยรายข้อ} | {...} | FR-03 |
 
-### Edge Cases
+### 3. Edge Cases `{c}` เคส
 
-- **TC-12** {เคสขอบ พร้อมผลลัพธ์ที่คาดหวังชัดเจน} `[FR-04]`
-- ...
+| TC | เทสอะไร | คาดหวัง | อ้างอิง |
+|---|---|---|---|
+| TC-12 | {เคสขอบ} | {ผลลัพธ์ที่ชัดเจน ห้ามเว้นว่าง} | EC-02 |
 
-### Regression — ฟีเจอร์ที่กระทบ
+### 4. Regression — ฟีเจอร์ที่กระทบ `{d}` เคส
 
-- **TC-20** {ฟีเจอร์ X ยังทำงานปกติ — ระบุจุดที่ share code กับงานนี้}
-- ...
+| TC | ฟีเจอร์ | share อะไรกับงานนี้ | คาดหวัง |
+|---|---|---|---|
+| TC-20 | {ชื่อฟีเจอร์เดิม} | {API/ตาราง/component ที่ใช้ร่วมกัน} | ยังทำงานเหมือนเดิมทุกอย่าง |
 
-### Permissions & อื่น ๆ
+### 5. Permissions & อื่น ๆ `{e}` เคส
 
-- **TC-25** {สิทธิ์แต่ละ role / security / performance} `[FR-01]`
-- ...
+| TC | เทสอะไร | คาดหวัง | อ้างอิง |
+|---|---|---|---|
+| TC-25 | {สิทธิ์ราย role / security / performance} | {...} | FR-01 |
+
+<details>
+<summary>ขั้นตอนละเอียดของเคสที่ทำตามยาก ({TC ids})</summary>
+
+**TC-XX** — {ชื่อเคส}
+1. {step}
+2. {step}
+
+</details>
 
 ## ตาราง Traceability
 
 | Requirement | TC ที่ครอบคลุม |
 |---|---|
 | FR-01 | TC-01, TC-12, TC-25 |
-| FR-02 | TC-01, TC-05 |
-| Edge: {ชื่อเคส} | TC-12 |
+| BR-01 | TC-04 |
+| EC-02 | TC-13 |
 
 ## สิ่งที่เทสอัตโนมัติครอบคลุมแล้ว
 
-- {test อัตโนมัติที่มีอยู่ใน codebase ที่คัฟเวอร์บางเคสแล้ว พร้อม path — ถ้าไม่มีให้ตัด section นี้ทิ้ง}
+| TC | ครอบคลุมโดย | path |
+|---|---|---|
+| TC-06 | unit test เดิม | `{path}` |
+
+{ถ้าไม่มีให้ตัด section นี้ทิ้ง}
 ```
 
 Formatting rules:
 
-- Number TCs sequentially across the whole document (`TC-01, TC-02, ...`) — one behavior per TC, ชื่อเคสต้องอ่านแล้วรู้ทันทีว่าเทสอะไร
-- Tag each TC with the FR/Business Rule it covers in backticks (`[FR-03]`); regression TCs tag the impacted feature name instead
-- Add a `คาดหวัง:` line whenever the expected result is not obvious from the case name — edge cases almost always need it
-- ห้ามตัดเคสเพื่อให้สั้น — ถ้าเคสเยอะแปลว่าทำถูกแล้ว
+- Number TCs sequentially across the whole document (`TC-01, TC-02, ...`) — one behavior per TC, ชื่อเคสอ่านแล้วรู้ทันทีว่าเทสอะไร
+- คอลัมน์ "อ้างอิง" ต้องชี้ id จริงใน requirement (`FR-03`, `BR-01`, `EC-02`) — regression ชี้ชื่อฟีเจอร์ที่กระทบแทน
+- **คอลัมน์ "คาดหวัง" ห้ามเว้นว่าง** — QA ต้องตัดสินผ่าน/ไม่ผ่านได้โดยไม่ต้องถามใคร
+- ขั้นตอน reproduce ที่ยาวเกิน 1 บรรทัด อย่ายัดลงตาราง ให้ไปอยู่ใน `<details>` ท้าย section แล้วอ้าง TC id
+- **ห้ามตัดเคสเพื่อให้สั้น** — เคสเยอะแปลว่าทำถูกแล้ว ความอ่านง่ายมาจากตารางกับหัวข้อที่มีตัวเลขกำกับ ไม่ใช่จากการมีเคสน้อยลง
 
 ### Example (register to aim for)
 
 ```markdown
 # Testing Plan — QA-482 | ส่งออกออเดอร์เป็น CSV แบบกลุ่ม
 
-ครอบคลุมการส่งออก CSV แบบกลุ่มจากหน้ารายการออเดอร์ ทั้งการเลือกคอลัมน์ การส่งออกแบบกรองข้อมูล ชุดข้อมูลขนาดใหญ่ และเคสขอบด้านโลเคล/ไทม์โซน อิงจาก requirement.md ณ วันที่จัดทำ เทสบน staging
+> [!summary] สรุป 30 วินาที
+> - **เทสอะไร:** export ออเดอร์เป็น CSV แบบกลุ่มจากหน้า Orders list
+> - **จำนวนเคส:** `13` TC — E2E `3` · Functional `4` · Edge `4` · Regression `1` · Permission `1`
+> - **ฟีเจอร์เดิมที่ต้องเฝ้า:** ตัวกรองหน้า Orders list (ใช้ query builder ตัวเดียวกัน)
+> - **เทสบน:** staging · อิง requirement ณ `2026-09-11`
+> - **ต้องเตรียมก่อน:** account `staff`, `viewer` + ออเดอร์อย่างน้อย `10,001` รายการ
 
 ## รายการทดสอบ
 
-### E2E Flow
+### 1. E2E Flow `3` เคส
 
-- **TC-01** ส่งออกออเดอร์ทั้งหมดด้วยคอลัมน์เริ่มต้น ตั้งแต่กดปุ่มจนได้ไฟล์ `[FR-01, FR-02]`
-- **TC-02** ส่งออกโดยเลือกคอลัมน์เอง `[FR-02]`
-- **TC-03** การส่งออกเป็นไปตามตัวกรองสถานะ/วันที่ที่ใช้งานอยู่ `[FR-03]`
+| TC | เทสอะไร | คาดหวัง | อ้างอิง |
+|---|---|---|---|
+| TC-01 | export ทั้งหมดด้วยคอลัมน์เริ่มต้น ตั้งแต่กดปุ่มจนได้ไฟล์ | ได้ไฟล์ CSV ครบทุกแถวตามที่เห็นบนหน้าจอ | FR-01, FR-02 |
+| TC-02 | export โดยเลือกคอลัมน์เอง | ไฟล์มีเฉพาะคอลัมน์ที่เลือก เรียงตาม panel | FR-02 |
+| TC-03 | export ขณะเปิดตัวกรองสถานะ + ช่วงวันที่ | ไฟล์มีเฉพาะออเดอร์ที่ตรงตัวกรอง | FR-03 |
 
-### Functional Cases
+### 3. Edge Cases `4` เคส
 
-- **TC-04** ปุ่มส่งออกถูกปิดใช้งานระหว่างที่การส่งออกก่อนหน้ายังทำงานอยู่ `[BR: กันกดซ้ำ]`
-- **TC-06** ค่าที่มีจุลภาคใน CSV ถูกครอบด้วยเครื่องหมายคำพูดอย่างถูกต้อง `[FR-06]`
-- **TC-08** ค่าสกุลเงินถูกส่งออกด้วยทศนิยม 2 ตำแหน่ง `[FR-07]`
-- **TC-10** การส่งออกทำให้เกิดการดาวน์โหลด ไม่ใช่การเปิดแท็บใหม่ `[FR-02]`
+| TC | เทสอะไร | คาดหวัง | อ้างอิง |
+|---|---|---|---|
+| TC-05 | export ออเดอร์เกิน `10,000` รายการ | มี progress indicator, UI ไม่ค้าง, ไฟล์ครบทุกแถว | EC-04 |
+| TC-07 | export ตอนไม่มีออเดอร์ตรงเงื่อนไข | ขึ้น empty-state ไม่ดาวน์โหลดไฟล์ | EC-01 |
+| TC-11 | ยิง export พร้อมกันจากสองแท็บ | ทั้งสองไฟล์ถูกต้อง ไม่ชนกัน | BR-02 |
+| TC-13 | ช่วงวันที่คาบเกี่ยวขอบ UTC | ออเดอร์ตกวันที่ถูกต้อง | EC-02 |
 
-### Edge Cases
+### 4. Regression — ฟีเจอร์ที่กระทบ `1` เคส
 
-- **TC-05** ส่งออกออเดอร์มากกว่า 10,000 รายการโดยไม่บล็อก UI thread `[FR-05]`
-  - คาดหวัง: มี progress indicator, UI ยังใช้งานได้, ไฟล์ครบทุกแถว
-- **TC-07** ส่งออกเมื่อไม่มีออเดอร์ที่ตรงเงื่อนไขจะแสดงข้อความ empty-state `[FR-04]`
-- **TC-11** คำขอส่งออกพร้อมกันจากสองแท็บไม่ชนกัน `[BR: export พร้อมกัน]`
-- **TC-13** การส่งออกช่วงวันที่ที่คาบเกี่ยวขอบเขตวัน UTC จัดเข้าวันที่ถูกต้อง `[Edge: UTC boundary]`
+| TC | ฟีเจอร์ | share อะไรกับงานนี้ | คาดหวัง |
+|---|---|---|---|
+| TC-20 | ตัวกรองหน้า Orders list | `buildOrderQuery()` ตัวเดียวกับที่ export เรียก | กรองแล้วได้ผลเท่าเดิมทุกเงื่อนไข |
 
-### Permissions & อื่น ๆ
+### 5. Permissions & อื่น ๆ `1` เคส
 
-- **TC-12** ตรวจสอบสิทธิ์: บทบาท viewer มองไม่เห็นปุ่มส่งออก `[FR-01]`
+| TC | เทสอะไร | คาดหวัง | อ้างอิง |
+|---|---|---|---|
+| TC-12 | เข้าด้วย role `viewer` | ไม่เห็นปุ่ม Export และยิง API ตรงได้ `HTTP 403` | FR-01 |
 ```
 
 ## Phase 3: Save and report
 
 1. Save to `{vault root}/tickets/{TASK-ID}/testing-plan.md`. If the file already exists, overwrite it but tell the user you replaced a previous version.
-2. Report to the user: total TC count, count per section, which impacted features got regression cases, and any requirement item that was hard to make testable (so they can push back on the requirement if needed).
+2. Report to the user: the TL;DR box verbatim (total TC count, count per section), which impacted features got regression cases, and any requirement item that was hard to make testable (so they can push back on the requirement if needed).

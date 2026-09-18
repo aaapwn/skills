@@ -104,48 +104,83 @@ One task gets tested multiple rounds (test → fix → re-test), so results are 
 - Folder: `{vault root}/tickets/{TASK-ID}/test-results/`
 - Filename: `round-{NN}-{YYYY-MM-DD}.md` — look at existing files in the folder to pick the next round number (first run = `round-01`)
 
-Write in Thai, technical terms in English:
+Write in Thai, technical terms in English. คนที่เปิดไฟล์นี้อยากรู้ 3 อย่างภายใน 10 วินาที: **ผ่านกี่เคส / พังตรงไหน / ปล่อยได้มั้ย** — เอาสามอย่างนี้ขึ้นบนสุด ที่เหลือซ่อนไว้ให้คนที่ต้องการเจาะ:
 
 ```markdown
 # Test Results — {TASK-ID} | รอบที่ {NN}
 
-{สรุป: เทสวันไหน กับ environment ไหน branch/commit ไหนของ repo งาน ผลรวม ผ่าน/ไม่ผ่าน — ถ้าเป็นรอบที่ 2 ขึ้นไป บอกด้วยว่ารอบนี้เทสซ้ำเพราะอะไร (เช่น หลังแก้ BUG-01, BUG-03 จากรอบก่อน)}
+> [!summary] สรุป 30 วินาที
+> - **ผล:** ✅ `{x}` · ❌ `{y}` · ⏭️ `{z}` จากทั้งหมด `{total}` TC
+> - **บัค:** `{n}` ตัว — 🔴 blocker `{a}` · 🟠 major `{b}` · 🟡 minor `{c}` · ⚪ cosmetic `{d}`
+> - **ปล่อยได้มั้ย:** {ยัง — ติด BUG-01, BUG-03 | ได้ — เหลือแต่ cosmetic}
+> - **เทสเมื่อ:** `{YYYY-MM-DD}` · env `{staging/local}` · branch `{branch}` @ `{commit}`
+> - **รอบนี้เทสเพราะ:** {รอบแรก | เทสซ้ำหลังแก้ BUG-01, BUG-03 จากรอบก่อน}
 
-## สรุปผล
+## สรุปผลตาม Tier
 
-| Tier | ผ่าน | ไม่ผ่าน | Skip | หมายเหตุ |
+| Tier | ✅ ผ่าน | ❌ ไม่ผ่าน | ⏭️ Skip | หมายเหตุ |
 |---|---|---|---|---|
 | 1 — API | 12 | 1 | 0 | |
 | 2 — E2E | 8 | 2 | 0 | |
 | 3 — Chrome | 4 | 1 | 1 | TC-31 skip เพราะ {เหตุผล} |
 
-## ผลรายเคส
+## ❌ เคสที่ไม่ผ่าน / ข้าม
+
+| TC | Test Case | สถานะ | สาเหตุ |
+|---|---|---|---|
+| TC-04 | ปุ่มส่งออกถูก disable ระหว่าง export | ❌ ไม่ผ่าน | ปุ่มยังกดซ้ำได้ระหว่างรอ response → BUG-01 |
+| TC-31 | {ชื่อเคส} | ⏭️ Skip | {เหตุผลที่เทสไม่ได้} |
+
+<details>
+<summary>ผลรายเคสทั้งหมด `{total}` เคส (รวมที่ผ่าน)</summary>
 
 | TC | Test Case | สถานะ | สาเหตุ (ถ้าไม่ผ่าน) |
 |---|---|---|---|
 | TC-01 | ส่งออกออเดอร์ทั้งหมดด้วยคอลัมน์เริ่มต้น | ✅ ผ่าน | |
-| TC-04 | ปุ่มส่งออกถูก disable ระหว่าง export | ❌ ไม่ผ่าน | ปุ่มยังกดซ้ำได้ระหว่างรอ response — ดู BUG-01 |
-| TC-31 | {ชื่อเคส} | ⏭️ Skip | {เหตุผลที่เทสไม่ได้} |
+| TC-02 | ... | ✅ ผ่าน | |
+
+</details>
 
 ## บัคที่พบ
 
-### BUG-01 — {หัวข้อบัคสั้น ๆ} `[TC-04]`
-- **ความรุนแรง:** {blocker / major / minor / cosmetic}
-- **ที่พบ:** {tier + หน้า/endpoint}
+| Bug | ระดับ | หัวข้อ | TC | ที่พบ |
+|---|---|---|---|---|
+| BUG-01 | 🔴 blocker | {หัวข้อสั้น ๆ} | TC-04 | Tier 2 — หน้า {ชื่อหน้า} |
+
+<details>
+<summary>BUG-01 — {หัวข้อสั้น ๆ} 🔴 blocker</summary>
+
 - **ขั้นตอน reproduce:** {ทีละ step ที่ทำซ้ำได้จริง}
 - **คาดหวัง:** {จาก requirement/testing plan}
-- **ที่เกิดจริง:** {สิ่งที่เห็น พร้อม error message/screenshot ถ้ามี}
-- **จุดที่น่าจะเกี่ยว:** {ไฟล์/ฟังก์ชันใน repo งานที่สงสัย ถ้าพอชี้ได้ — ชี้เฉย ๆ ไม่แก้}
+- **ที่เกิดจริง:** {สิ่งที่เห็น + error message/screenshot ถ้ามี}
+- **จุดที่น่าจะเกี่ยว:** {ไฟล์/ฟังก์ชันใน repo งานที่สงสัย — ชี้เฉย ๆ ไม่แก้}
+
+</details>
+
+## Exploratory findings
+
+| # | เจออะไร | ความรุนแรงที่ประเมิน | ไม่มี TC ครอบเพราะ |
+|---|---|---|---|
+| EX-01 | {สิ่งที่สะดุดตาระหว่าง exploratory pass} | 🟡 minor | {plan ไม่ได้ครอบเคสนี้} |
+
+{ถ้าไม่เจออะไรให้ตัด section นี้ทิ้ง}
 
 ## Test scripts
 
-- Spec: `{Playwright workspace}/tests/{TASK-ID}/` — รันซ้ำได้ด้วย `npx playwright test tests/{TASK-ID}` หลังแก้บัค
+- Spec: `{Playwright workspace}/tests/{TASK-ID}/`
+- รันซ้ำหลังแก้บัค: `npx playwright test tests/{TASK-ID}`
 ```
 
-Every TC in the testing plan must appear in the per-case table — passed, failed, or skipped with a reason. No silent omissions. The สถานะ column uses exactly: `✅ ผ่าน`, `❌ ไม่ผ่าน`, `⏭️ Skip` — and every ❌ must have a สาเหตุ.
+Recording rules:
 
-On re-test rounds (round 2+), read the previous round's file first: focus the summary on what changed (which bugs got fixed, which TCs flipped from ไม่ผ่าน to ผ่าน, any new regressions), but still record every TC in the per-case table.
+- **ทุก TC ใน testing plan ต้องอยู่ในตาราง "ผลรายเคสทั้งหมด"** — ผ่าน/ไม่ผ่าน/skip พร้อมเหตุผล ห้ามหายเงียบ ๆ (ตารางด้านบนเป็นแค่ทางลัดให้คนขี้เกียจ ไม่ใช่ที่เก็บผลจริง)
+- สถานะใช้เป๊ะ 3 แบบ: `✅ ผ่าน`, `❌ ไม่ผ่าน`, `⏭️ Skip` — ทุก ❌ ต้องมีสาเหตุ และต้องชี้ `BUG-xx`
+- ระดับบัคใช้ `🔴 blocker`, `🟠 major`, `🟡 minor`, `⚪ cosmetic` เท่านั้น
+- รายละเอียดบัคอยู่ใน `<details>` ตัวละบล็อก — ตาราง index ด้านบนมีไว้ให้สแกน `summary` ของ details ต้องมีทั้ง id หัวข้อ และระดับ
+- ตัวเลขในกล่อง TL;DR ต้องตรงกับตารางเสมอ
+
+On re-test rounds (round 2+), read the previous round's file first. เพิ่มบรรทัด **"เทียบรอบก่อน"** ในกล่อง TL;DR (`BUG-01 ✅ แก้แล้ว · BUG-03 ❌ ยังพัง · regression ใหม่ 1`) แล้วยังบันทึกทุก TC ในตารางเต็มเหมือนเดิม
 
 ## Phase 5: Report
 
-Tell the user: which round this was, overall pass/fail counts (with change vs. the previous round if any), each bug found in one line with severity, the rerun command for the ticket's specs, and the path to the round file in `test-results/`. Confirm the work repo was not modified. Do not fix anything — offer "แก้บัคแล้วรันเทสซ้ำ" as the next step and stop.
+Tell the user the TL;DR box verbatim — which round this was, overall pass/fail counts (with change vs. the previous round if any), each bug found in one line with severity, the rerun command for the ticket's specs, and the path to the round file in `test-results/`. Confirm the work repo was not modified. Do not fix anything — offer "แก้บัคแล้วรันเทสซ้ำ" as the next step and stop.
