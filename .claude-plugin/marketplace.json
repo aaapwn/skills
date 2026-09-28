@@ -1,0 +1,14 @@
+{
+  "name": "aaapwn-skills",
+  "description": "Personal Claude Code plugins by aaapwn",
+  "owner": {
+    "name": "aaapwn"
+  },
+  "plugins": [
+    {
+      "name": "crewsade",
+      "source": "./plugins/claude/crewsade",
+      "description": "Team mode for Claude Code: the foreman skill turns the main session into a lead that plans and decides, while scout, developer, auditor and worker agents do the reading, coding and checking."
+    }
+  ]
+}
