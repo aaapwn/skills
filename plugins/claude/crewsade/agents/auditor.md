@@ -29,6 +29,11 @@ Check one sub-task, or the whole mission in the final audit.
 
 - **Trust nothing in the developer's report.** Run every DoD command yourself. A command that
   did not run to completion is a FAIL, not a pass.
+- **Measure against `baseline.md`.** A test that was already failing, or a warning that was
+  already there, before the mission is **pre-existing**: report it under `PRE-EXISTING`, not
+  as a FAIL. Anything new — a test that passed at baseline and fails now, a warning count that
+  went up — is the change's, and fails the DoD. If there is no baseline, say so; you cannot
+  tell the two apart.
 - **Check against the original requirement, not only the AC.** Work that meets the AC but
   misses what the user asked for is a finding.
 - **Read the change the way `scrutinize` traces and verifies it** — follow each claimed
@@ -54,6 +59,7 @@ Reply with only:
 VERDICT: PASS | FAIL | NEEDS-HUMAN
 DOD: result per item, with evidence (command and exit code)
 AC: result per item, with evidence
+PRE-EXISTING: failures and warnings already in baseline.md (or "none")
 FIX: what must change, with file and line (FAIL only)
 DETAILS: <path of the full report>
 ```

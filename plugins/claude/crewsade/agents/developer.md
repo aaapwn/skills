@@ -31,6 +31,9 @@ present, governs how you write. If it did not load, these carry its core:
 - Follow every entry in the decision log. If one looks wrong, say so under `QUESTIONS` with
   `STATUS: needs-input`; do not work around it.
 - Stay inside *Scope*. Never touch a path listed as not to touch.
+- Read `.crewsade/context/baseline.md`: how the code behaves today and what was already
+  failing before you started. Do not fix pre-existing failures outside your scope — list them
+  under `ASSUMPTIONS` if they got in your way.
 
 ## While writing
 

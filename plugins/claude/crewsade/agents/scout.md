@@ -33,6 +33,22 @@ Report plainly where the ticket, any existing plan and the code **disagree**: sc
 belongs to another ticket, criteria the code already meets, steps that assume an API the
 library does not have.
 
+## When you are the baseline scout
+
+Your file is what everyone after you measures against, so it must describe the tree exactly
+as it was before anyone changed it.
+
+- Record `git rev-parse HEAD` and `git status --short` first. If the tree already has
+  uncommitted changes, say so at the top — the baseline includes them.
+- **Current behaviour** is traced through the code, not inferred from names: entry point →
+  branches taken → state changed → side effect, each step with `file:line`.
+- **Existing work** means searching, not asking: the task key in commit messages across all
+  branches, branch names, open PRs/MRs (`gh`/`glab` if available), and docs in the repo. Say
+  where you searched even when you found nothing.
+- **Run every DoD command** from `config.md` and record, per command: the exact command, its
+  exit code, every test already failing by name, and the warning count. A command that cannot
+  run is recorded as such, with the error — that is a finding, not a gap to skip.
+
 ## When the brief points you at a reference branch
 
 A POC, spike or earlier attempt is worth the conclusions it paid for, not its code. Read its

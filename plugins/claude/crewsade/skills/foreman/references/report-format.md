@@ -18,6 +18,7 @@ DETAILS: path to the full report
 VERDICT: PASS | FAIL | NEEDS-HUMAN
 DOD: result per item, with evidence (command run and its exit code)
 AC: result per item, with evidence
+PRE-EXISTING: failures and warnings already in the baseline
 FIX: what must change, with file and line (FAIL only)
 DETAILS: path to the full report
 ```

@@ -109,8 +109,15 @@ mission that is not `done` or `aborted`, ask whether to resume it or start a new
 1. **Intake.** Restate the mission in one or two lines.
 2. **Sources.** Ask for the related documents as ticket keys, URLs or paths. Do not ask the
    user to paste content.
-3. **Explore.** Dispatch scouts — one per source or per area of the codebase, in parallel.
-   Each writes its full findings to `.crewsade/context/` and returns a summary.
+3. **Explore.** Dispatch scouts in parallel, each writing its full findings to
+   `.crewsade/context/` and returning a summary:
+   - **Always one baseline scout** — how the parts this mission touches behave today, which
+     tests cover them, what work on this task already exists, and the result of every DoD
+     command before anything changes. It writes `.crewsade/context/baseline.md`. The plan is
+     built on it, and the auditor measures against it: without a baseline, a test that was
+     already failing reads as the developer's fault.
+   - One scout per source (ticket, page, document) and per further area of the codebase, as
+     needed.
 4. **Plan.** Break the mission into sub-tasks, in order, each with its acceptance criteria.
    Every AC names how it is checked: `auto` (a command or test), `inspect` (the auditor reads
    the code), or `human` (the user checks — UI look, staging behaviour). Write it to
@@ -125,8 +132,8 @@ mission that is not `done` or `aborted`, ask whether to resume it or start a new
       [`references/brief-template.md`](references/brief-template.md).
    2. Read its `ASSUMPTIONS`. Send back any that are wrong before the audit; log the right
       ones in the decision log.
-   3. Dispatch the auditor with the sub-task's DoD and AC **and the user's original
-      requirement**.
+   3. Dispatch the auditor with the sub-task's DoD and AC, **the user's original
+      requirement**, and `baseline.md`.
    4. On `FAIL`, **triage the `FIX` list** into must fix / optional / disagree, as
       [`references/report-format.md`](references/report-format.md) describes. Resume the
       developer with the must-fix items only, then audit again. **After two failed rounds,
@@ -141,8 +148,9 @@ mission that is not `done` or `aborted`, ask whether to resume it or start a new
    every divergence from the approved plan with its reason, and every `NEEDS-HUMAN` item they
    must check themselves. Then record lessons (see [Lessons](#lessons)).
 
-A small change where you already know what to edit may skip step 3. A mission with a single,
-small sub-task may skip steps 5 and 8.
+A small change whose sources you already hold may skip the source scouts in step 3, never
+the baseline scout: you have read summaries, not the code. A mission with a single, small
+sub-task may skip steps 5 and 8.
 
 Pushing, opening a PR and changing a ticket are the user's call. When they ask, run
 [ship](#ship).

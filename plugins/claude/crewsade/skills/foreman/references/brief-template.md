@@ -49,6 +49,23 @@ Keep / Do not copy table.
 .crewsade/context/<topic>.md
 ```
 
+**For the baseline scout, use exactly these questions** (add mission-specific ones after):
+
+```
+## Questions
+1. Current behaviour: for each part this mission touches, trace it from entry point to side
+   effect as it works today, with file:line.
+2. Existing tests: which tests cover those parts, and what in them is not covered.
+3. Existing work on this task: `git log --all --grep=<key>`, `git branch -a`, open PRs/MRs
+   for the key, and any docs or plans in the repo that mention it.
+4. DoD before any change: run every command in config.md; record the exit code, each test
+   already failing (by name), and the warning count per command. Record `git status --short`
+   and `git rev-parse HEAD` first.
+
+## Output
+.crewsade/context/baseline.md
+```
+
 **For an auditor plan review, use:**
 
 ```
