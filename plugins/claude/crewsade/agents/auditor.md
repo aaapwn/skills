@@ -46,7 +46,15 @@ Check one sub-task, or the whole mission in the final audit.
 - **Each AC by its check type:**
   - `auto` — run the command or test and record the result.
   - `inspect` — read the code and cite `file:line` for what satisfies it or breaks it.
-  - `human` — do not guess. Mark it `NEEDS-HUMAN` and say exactly what the user should look at.
+  - `visual` — run the system, take a screenshot of each screen and supported screen size the
+    AC names, save them under `.crewsade/reports/screenshots/`, and judge them yourself:
+    layout, content, and every "must not appear" pattern. Cite the screenshot path. If the
+    session has no way to run the system or take screenshots, mark it `NEEDS-HUMAN` and say
+    why.
+  - `human` — do not guess. Mark it `NEEDS-HUMAN`, say exactly what the user should look at,
+    and attach any screenshot that helps them judge it.
+- **In the final audit, check the mission's *Done when* line first**, as its own item: every
+  AC can pass while the mission is not done.
 - **In the final audit, walk every AC against the running system** as `proof` describes —
   real responses, every supported screen size, direct API calls — wherever the project can
   be run. Say which criteria you could only check by reading.

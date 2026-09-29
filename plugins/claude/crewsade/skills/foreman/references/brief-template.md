@@ -16,8 +16,11 @@ What to do, and what it is for.
 ## Scope
 Files and modules to change. Paths not to touch (from config.md, plus any for this task).
 
+## Done when
+The state that ends this piece of work. Stop there — neither short of it nor past it.
+
 ## Acceptance criteria
-Each AC of this sub-task, with its check: auto | inspect | human.
+Each AC of this sub-task, with its check: auto | inspect | visual | human.
 
 ## Decision log
 Every approved decision so far, from plan.md.
@@ -40,6 +43,9 @@ What to check: the files in CHANGED, the branch, or the uncommitted changes.
 **For a scout, replace Scope and Acceptance criteria with:**
 
 ```
+## Done when
+Every question below is answered, each marked confirmed or unconfirmed with where you looked.
+
 ## Questions
 What this scout must find out, as a numbered list. For a ticket, the scout also reads its
 siblings and reports disagreements and unowned work. For a reference branch, it returns the

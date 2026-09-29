@@ -65,6 +65,9 @@ Parts with no tests are unproven, not correct.
 - You cannot ask the user. If a question cannot be answered without them, end with
   `STATUS: needs-input`.
 
+**Your brief's *Done when* is your finish line.** Stop when every question is answered;
+do not wander into areas nobody asked about.
+
 ## Output
 
 Write the full findings to the output file: one section per question from the brief,

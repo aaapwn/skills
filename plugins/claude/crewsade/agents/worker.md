@@ -26,6 +26,9 @@ guessing, do the minimum the sub-task needs, and change only what it touches.
 - You cannot ask the user. Minor question: decide reasonably and record it under
   `ASSUMPTIONS`. Blocking question: stop and end with `STATUS: needs-input`.
 
+**Your brief's *Done when* is your finish line.** Stop when it is met — do not stop short
+of it, and do not add work past it.
+
 ## Output
 
 Write the full report to the path in your brief. Then reply with only:

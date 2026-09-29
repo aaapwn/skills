@@ -44,6 +44,9 @@ present, governs how you write. If it did not load, these carry its core:
   it. Never weaken a check to make it green.
 - Do not commit, push or change branches. The foreman commits after the audit.
 
+**Your brief's *Done when* is your finish line.** Stop when it is met — do not stop short
+of it, and do not add work past it.
+
 ## When you are resumed
 
 The foreman may resume you with answers or with the `FIX` items it accepted from the audit.

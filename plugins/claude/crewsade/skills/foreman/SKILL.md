@@ -29,6 +29,42 @@ in the same message as the next action.
 5. **Do not delegate small work.** If the brief would be longer than doing it, do it
    yourself.
 
+## When to stop
+
+You stop and wait for the user **only** in these cases. Everything else, keep going, and put
+the status line in the same message as the next action.
+
+1. **Plan approval** — once per mission (Mission step 6).
+2. **A decision that is the user's** — one you cannot answer from the plan, the decision log,
+   the context files or the code.
+3. **Audit stuck** — two failed rounds on one sub-task, or a `FIX` that contradicts something
+   already approved.
+4. **Before anything that leaves the machine or cannot be undone** — push, opening a PR,
+   changing a ticket, deleting files outside the scope, destructive git commands. This holds
+   even when the user said to keep going.
+5. **Missing access** — a credential, permission or system the crew cannot reach.
+
+Never stop to ask for confirmation of something you can decide: no "shall I continue?", no
+"do you want me to…?", no "is this OK?" when the recommended answer is clear. Do it and say
+so. After the plan is approved, run every sub-task through to handover without pausing
+between them.
+
+**An answered question stays answered.** Anything in the decision log is settled: do not
+ask it again, and do not reopen it unless new evidence contradicts it — then say what the
+evidence is.
+
+## When the user writes mid-mission
+
+A message that arrives while the crew is working is a change, not an interruption. Read it
+against the plan:
+
+- It adds information or a preference inside the approved scope: log it in the decision log,
+  pass it to the agent that is working (via `SendMessage`) or to the next brief, and carry on.
+- It changes an approved AC, the *Done when* line or the scope: update `plan.md`, say what
+  changed and which finished sub-tasks it affects, and get approval for that change only —
+  this is case 2 above.
+- It is a question: answer it in one or two lines and carry on.
+
 ## The crew
 
 | Agent (`subagent_type`) | Role | Writes | Parallel |
@@ -95,9 +131,10 @@ re-read it before doing anything else. Its shape is in
 2. From its summary, draft `.crewsade/config.md` using
    [`references/config-template.md`](references/config-template.md). Every command in it must
    have been run by the scout; mark any it could not run.
-3. Ask the user to confirm, one question at a time: the DoD, the paths the crew must not
-   touch, and the commit policy.
-4. Write `config.md`, then ask whether to add `.crewsade/` to `.gitignore`.
+3. Show the whole draft — DoD, paths not to touch, commit policy, and whether to add
+   `.crewsade/` to `.gitignore` — with your recommended value for each, and ask for **one**
+   approval. The user corrects only what they disagree with.
+4. Write `config.md` and apply the `.gitignore` choice.
 
 Running `init` again edits the existing config instead of starting over.
 
@@ -107,8 +144,8 @@ If `.crewsade/config.md` does not exist, run [init](#init) first. If `plan.md` h
 mission that is not `done` or `aborted`, ask whether to resume it or start a new one.
 
 1. **Intake.** Restate the mission in one or two lines.
-2. **Sources.** Ask for the related documents as ticket keys, URLs or paths. Do not ask the
-   user to paste content.
+2. **Sources.** Take every ticket key, URL and path the task already names. Ask for sources
+   only when it names none — as keys, URLs or paths, never pasted content.
 3. **Explore.** Dispatch scouts in parallel, each writing its full findings to
    `.crewsade/context/` and returning a summary:
    - **Always one baseline scout** — how the parts this mission touches behave today, which
@@ -118,15 +155,24 @@ mission that is not `done` or `aborted`, ask whether to resume it or start a new
      already failing reads as the developer's fault.
    - One scout per source (ticket, page, document) and per further area of the codebase, as
      needed.
-4. **Plan.** Break the mission into sub-tasks, in order, each with its acceptance criteria.
-   Every AC names how it is checked: `auto` (a command or test), `inspect` (the auditor reads
-   the code), or `human` (the user checks — UI look, staging behaviour). Write it to
-   `plan.md`.
+4. **Plan.** Write the mission's **`Done when:`** line first — one sentence naming the
+   observable state that ends the mission (e.g. "every payment endpoint uses the new client,
+   the old client is deleted, and the suite passes"). Then break the mission into
+   sub-tasks, in order, each with its own *Done when* and acceptance criteria. Every AC
+   names how it is checked:
+   - `auto` — a command or test.
+   - `inspect` — the auditor reads the code.
+   - `visual` — the auditor runs the system, takes screenshots, and judges them itself.
+   - `human` — only what needs the user's own judgement: taste, brand, behaviour on a system
+     the crew cannot reach.
+
+   For UI work, write what must **not** appear as concrete patterns ("no pill buttons, no
+   cream background"), not general wishes ("not generic"). Write it all to `plan.md`.
 5. **Plan review.** Dispatch the auditor in plan-review mode. It asks what the plan cannot:
    whether a simpler way exists, and what the plan assumes that is not true. Revise what its
    `PROBLEMS` show; carry its `ALTERNATIVES` to the user rather than deciding them yourself.
-6. **Approve.** Show the plan, the AC and the review's alternatives. Wait for the user's
-   approval before any code changes.
+6. **Approve.** Show the *Done when* line, the plan, the AC and the review's alternatives.
+   Wait for the user's approval before any code changes. From here, run to handover.
 7. **Build and check,** one sub-task at a time:
    1. Dispatch the developer (or the worker for non-code work) with a brief from
       [`references/brief-template.md`](references/brief-template.md).
@@ -141,9 +187,10 @@ mission that is not `done` or `aborted`, ask whether to resume it or start a new
    5. On `PASS`, commit if the config's commit policy says so — stage the paths in
       `CHANGED` explicitly, never `git add -A` — mark the sub-task done, and move on.
 8. **Final audit.** When every sub-task is done, dispatch the auditor over the whole mission:
-   the DoD and every AC again, against the combined change **and against the running system**
-   wherever the project can be run — per-sub-task checks never observe the criterion the way
-   the user states it.
+   the mission's *Done when* line, the DoD and every AC again, against the combined change
+   **and against the running system** wherever the project can be run — per-sub-task checks
+   never observe the criterion the way the user states it. Every AC can pass while the
+   mission is still not done; the *Done when* line is what catches that.
 9. **Handover.** Report to the user: what was done, the acceptance report, the decision log,
    every divergence from the approved plan with its reason, and every `NEEDS-HUMAN` item they
    must check themselves. Then record lessons (see [Lessons](#lessons)).
