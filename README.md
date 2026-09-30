@@ -31,10 +31,5 @@ claude --plugin-dir ./plugins/claude/crewsade
 claude plugin validate . && claude plugin validate ./plugins/claude/crewsade
 ```
 
-## เลิกใช้แล้ว
-
-- `armsmith` — ถูกแทนที่ด้วย `crewsade` กฎการพิสูจน์งานใน Phase 4 ย้ายไปเป็น skill
-  `crewsade:proof`
-
 > Skill ชุด LMP Jira (`grill-jera-task`, `to-jira-requirement`, ...) ย้ายไปอยู่ GitLab
 > ขององค์กรแล้ว ไม่ได้ดูแลที่ repo นี้อีก
