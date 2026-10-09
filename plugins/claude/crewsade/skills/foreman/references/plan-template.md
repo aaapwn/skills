@@ -9,6 +9,13 @@ Done when: <one sentence: the observable state that ends the mission>
 ## Requirement
 <the user's words, or the ticket keys / URLs / paths>
 
+## Now
+Doing: <the step in hand, and who is on it>
+Next: <what happens when it ends>
+
+## Notes
+- <a fact the next step needs that no other file holds: why, a path, a trap found mid-task>
+
 ## Sub-tasks
 | # | Sub-task | Agent | Status | Failed rounds |
 | --- | --- | --- | --- | --- |

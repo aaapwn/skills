@@ -4,7 +4,9 @@ import {
   bandModel,
   followUp,
   logRows,
+  memoryContext,
   parseDescription,
+  sectionOf,
   parseReport,
   planEvents,
   subTaskStats,
@@ -267,5 +269,42 @@ describe('subTaskStats', () => {
 
   test('durations read in words', async () => {
     expect([duration(0), duration(6), duration(65)]).toEqual(['ไม่ถึง 1 นาที', '6 นาที', '1 ชม. 5 นาที'])
+  })
+})
+
+describe('memory after a compaction', () => {
+  const plan = PLAN.replace('## Sub-tasks', `## Now
+Doing: auditor checks sub-task 2
+Next: commit, then sub-task 3
+
+## Notes
+- the old client is still imported by the cron job; remove it last
+
+## Sub-tasks`)
+
+  test('reads a section, and ignores one that holds only template placeholders', async () => {
+    expect(sectionOf(plan, 'Now')).toBe('Doing: auditor checks sub-task 2\nNext: commit, then sub-task 3')
+    expect(sectionOf('## Now\nDoing: <the step in hand>\nNext: <what next>\n', 'Now')).toBe(null)
+    expect(sectionOf(plan, 'Missing')).toBe(null)
+  })
+
+  test('puts back the standing instructions and where the mission stands', async () => {
+    const memory = memoryContext('# Standing\n- tell me with `say` when done\n- never push without asking\n', plan)!
+    expect(memory.includes('- tell me with `say` when done')).toBe(true)
+    expect(memory.includes('- never push without asking')).toBe(true)
+    expect(memory.includes('Mission: Payment client migration (in-progress)')).toBe(true)
+    expect(memory.includes('Next: commit, then sub-task 3')).toBe(true)
+    expect(memory.includes('remove it last')).toBe(true)
+  })
+
+  test('standing instructions come back even when no mission is running', async () => {
+    const memory = memoryContext('- reply in Thai\n', PLAN.replace('Status: in-progress', 'Status: done'))!
+    expect(memory.includes('- reply in Thai')).toBe(true)
+    expect(memory.includes('Mission:')).toBe(false)
+  })
+
+  test('nothing to put back is null', async () => {
+    expect(memoryContext(null, null)).toBe(null)
+    expect(memoryContext('\n# Standing\n', PLAN.replace('Status: in-progress', 'Status: aborted'))).toBe(null)
   })
 })

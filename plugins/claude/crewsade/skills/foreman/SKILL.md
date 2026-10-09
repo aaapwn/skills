@@ -131,6 +131,7 @@ Read `$ARGUMENTS`:
 ```
 .crewsade/
 ├── config.md    ← from init: DoD, test/lint/build commands, stack, paths not to touch
+├── standing.md  ← the user's standing instructions; outlives the mission (see Memory)
 ├── plan.md      ← current mission: sub-tasks, status, AC, decision log
 ├── lessons.md   ← what went wrong on earlier missions, as rules (see Lessons)
 ├── log.jsonl    ← the mission's history, written by the status mod (do not edit)
@@ -138,9 +139,29 @@ Read `$ARGUMENTS`:
 └── reports/     ← full reports from developer, worker and auditor
 ```
 
-`plan.md` is your memory. Update it at every step, and after the context is summarised
-re-read it before doing anything else. Its shape is in
-[`references/plan-template.md`](references/plan-template.md).
+Its shape is in [`references/plan-template.md`](references/plan-template.md).
+
+## Memory that survives compaction
+
+On a long mission your context gets summarised, and anything that lived only in the
+conversation is gone after that. So nothing the next step needs lives only in the
+conversation: write it down the moment it exists.
+
+| What | Where | When |
+| --- | --- | --- |
+| The user's standing instructions — how to tell them things, what never to do, tools or language to use ("tell me with `say` when done", "never push without asking") | `.crewsade/standing.md`, one line each | the moment they say it, before acting on it |
+| The goal, sub-tasks, statuses and AC | `plan.md` | at plan time, then every step |
+| The step you are on and the one after it | `plan.md` `## Now` | every step, before you dispatch |
+| Facts the next step needs that no other file holds — why a choice was made, a path, a trap found mid-task | `plan.md` `## Notes` | when you learn them |
+| Decisions | `plan.md` decision log | when they are made |
+
+- **standing.md outlives the mission.** It holds instructions, not mission state, so a new
+  mission keeps it. When the user withdraws one ("stop using say"), delete that line.
+- **After a compaction** — the conversation opens with a summary, or you cannot recall the
+  detail of the step you are on — re-read `standing.md` and `plan.md` (Now, Notes, decision
+  log) before anything else, and follow `standing.md` as if the user had just said it. The
+  status mod also puts both back into your context on the first prompt after a compaction.
+- `## Now` is two lines, not a diary: what is happening now, and what happens next.
 
 ## init
 
@@ -241,8 +262,8 @@ Dispatch nothing.
 
 ## resume
 
-Read `plan.md` and the decision log, then continue from the first sub-task that is not
-done. The agents from before are gone: dispatch fresh ones, and point each brief at the
+Read `standing.md`, then `plan.md` — Now, Notes and the decision log — and continue from
+the first sub-task that is not done. The agents from before are gone: dispatch fresh ones, and point each brief at the
 reports that sub-task already has in `.crewsade/reports/`.
 
 ## audit

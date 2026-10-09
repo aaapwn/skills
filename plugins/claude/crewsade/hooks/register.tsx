@@ -2,9 +2,11 @@ import type { Color, Engine, Register } from 'claude-code'
 
 import {
   ICON,
+  COMPACT_INSTRUCTIONS,
   bandModel,
   followUp,
   logRows,
+  memoryContext,
   parseDescription,
   parsePlan,
   parseReport,
@@ -23,6 +25,7 @@ import { tasksSvg } from './taskscard'
 
 const PLAN = '.crewsade/plan.md'
 const LOG = '.crewsade/log.jsonl'
+const STANDING = '.crewsade/standing.md'
 const COMMAND = 'crewsade-band'
 const TASKS_PANE = 'crewsade-tasks'
 const LOG_PANE = 'crewsade-log'
@@ -39,6 +42,10 @@ let log: LogEntry[] = []
 // Each agent's runs, and the log entry its current run writes its result into
 const runs = new Map<string, number>()
 const openRun = new Map<string, string>()
+
+// Put the crewsade memory back into context on the next prompt: at the start of a
+// session, and after every compaction of the main conversation
+let isRestoreDue = true
 
 // Hidden by the person, until they show it again or start the foreman again
 let isHidden = false
@@ -96,6 +103,14 @@ async function refresh($: Engine) {
       await saveLog($)
     }
     $.ui.invalidate('ui.render')
+  }
+}
+
+async function readIfThere($: Engine, path: string): Promise<string | null> {
+  try {
+    return (await $.fs.exists(path)) ? await $.fs.read(path) : null
+  } catch {
+    return null
   }
 }
 
@@ -186,6 +201,23 @@ export const register: Register = on => {
     isHidden = arg === 'hide' ? true : arg === 'show' ? false : !isHidden
     $.ui.invalidate('ui.render')
     return { text: isHidden ? `crewsade band hidden — /${COMMAND} show to bring it back` : 'crewsade band shown' }
+  })
+
+  // A compaction loses what lived only in the conversation: tell the summariser what to
+  // keep, and put the files back on the next prompt
+  on('session.compact', async ($, e, next) => {
+    if (e.agentId) return next(e)
+    isRestoreDue = true
+    const instructions = [e.instructions, COMPACT_INSTRUCTIONS].filter(Boolean).join('\n')
+    return next({ ...e, instructions })
+  })
+
+  on('prompt.submit', async ($, e, next) => {
+    if (!isRestoreDue) return next(e)
+    isRestoreDue = false
+    const memory = memoryContext(await readIfThere($, STANDING), await readIfThere($, PLAN))
+    if (!memory) return next(e)
+    return next({ ...e, context: [...(e.context ?? []), memory] })
   })
 
   // Using crewsade again brings the band back, whatever was hidden before

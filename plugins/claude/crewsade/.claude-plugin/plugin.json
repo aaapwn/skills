@@ -1,6 +1,6 @@
 {
   "name": "crewsade",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Team mode for Claude Code: the foreman skill turns the main session into a lead that plans and decides, while scout, developer, auditor and worker agents do the reading, coding and checking.",
   "author": {
     "name": "aaapwn"
