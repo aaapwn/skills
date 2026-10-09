@@ -43,6 +43,7 @@ Skill เดี่ยวที่ไม่ได้อยู่ใน plugin อ
 | --- | --- |
 | [`gojira`](skills/gojira/SKILL.md) | เขียน Jira task ที่มีเป้าหมาย ขอบเขต และเกณฑ์ตรวจรับ ให้ dev หยิบไปทำได้และคนตรวจเช็คได้ทีละข้อ |
 | [`bulletin`](skills/bulletin/SKILL.md) | สรุปงานที่ทำเสร็จแล้วสั้นๆ สำหรับ PR/MR description, รายงาน PM หรือ comment ใน Jira |
+| [`saykenya`](skills/saykenya/SKILL.md) | พูดบอกด้วยเสียงภาษาไทย (`say -v Kanya` บน Mac) ทุกครั้งที่ทำงานเสร็จ ไม่ต้องคอยเฝ้าหน้าจอ |
 
 สองตัวนี้ใช้คู่กันได้ตั้งแต่ต้นจนจบ task: `gojira` ตอนเปิดงาน → ทำงาน (เองหรือผ่าน
 `crewsade`) → `bulletin` ตอนส่งงาน
