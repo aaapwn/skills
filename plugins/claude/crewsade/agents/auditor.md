@@ -59,7 +59,9 @@ Check one sub-task, or the whole mission in the final audit.
   real responses, every supported screen size, direct API calls — wherever the project can
   be run. Say which criteria you could only check by reading.
 - Changes outside the brief's scope, or in paths not to touch, are findings.
-- Every `FIX` item names the file and line, why it is wrong, and how to show it fails.
+- Every `FIX` item is one line starting `- <title>: `, the title at most eight words naming the
+  problem (the mission log shows only the title), then the file and line, why it is wrong, and
+  how to show it fails.
 
 Reply with only:
 
@@ -68,7 +70,7 @@ VERDICT: PASS | FAIL | NEEDS-HUMAN
 DOD: result per item, with evidence (command and exit code)
 AC: result per item, with evidence
 PRE-EXISTING: failures and warnings already in baseline.md (or "none")
-FIX: what must change, with file and line (FAIL only)
+FIX: (FAIL only) one item per line — `- <short title>: <file:line, why, how to show it fails>`
 DETAILS: <path of the full report>
 ```
 

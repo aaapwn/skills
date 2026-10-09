@@ -80,6 +80,24 @@ and the auditor `scrutinize`, when those skills are installed.
 
 How to dispatch:
 
+- **Write every Agent call's `description` as `role · job · subject`**, in the user's
+  language. The band above the prompt shows exactly this as the agent's work — it never
+  guesses from tool calls — so the job says what the agent was given to do and the subject
+  names the sub-task or source:
+
+  | Agent | Jobs |
+  | --- | --- |
+  | scout | `สำรวจโค้ดเดิม`, `วัดผลเทสก่อนแก้`, `อ่าน ticket`, `อ่านเอกสาร` |
+  | developer | `เขียนโค้ด`, `แก้ตามผลตรวจ (n ข้อ)` |
+  | auditor | `รีวิวแผนก่อนอนุมัติ`, `ตรวจงานที่ developer แก้มา`, `ตรวจรวมทั้ง mission` |
+  | worker | `เขียนเอกสาร`, `แก้ config`, `รวบรวมข้อมูล` |
+
+  For example `auditor · ตรวจงานที่ developer แก้มา · ย้าย capture endpoint`, or
+  `scout · อ่าน ticket · LMP-1234`.
+- **When `SendMessage` gives an agent new work, write its `summary` the same way** —
+  `developer · แก้ตามผลตรวจ (2 ข้อ) · ย้าย capture endpoint` — so the band shows the new
+  job instead of the old one. A summary in any other shape leaves the band as it was.
+
 - **An agent that needs MCP tools (Jira, Confluence) must run in the foreground**
   (`run_in_background: false`). Background subagents lose MCP tools. To run several scouts
   in parallel, send the Agent calls in one message.
@@ -115,6 +133,7 @@ Read `$ARGUMENTS`:
 ├── config.md    ← from init: DoD, test/lint/build commands, stack, paths not to touch
 ├── plan.md      ← current mission: sub-tasks, status, AC, decision log
 ├── lessons.md   ← what went wrong on earlier missions, as rules (see Lessons)
+├── log.jsonl    ← the mission's history, written by the status mod (do not edit)
 ├── context/     ← full findings from scouts
 └── reports/     ← full reports from developer, worker and auditor
 ```

@@ -19,7 +19,7 @@ VERDICT: PASS | FAIL | NEEDS-HUMAN
 DOD: result per item, with evidence (command run and its exit code)
 AC: result per item, with evidence
 PRE-EXISTING: failures and warnings already in the baseline
-FIX: what must change, with file and line (FAIL only)
+FIX: (FAIL only) one item per line — `- <short title>: <file:line, why, how to show it fails>`
 DETAILS: path to the full report
 ```
 
