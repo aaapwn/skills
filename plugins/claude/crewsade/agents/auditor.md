@@ -18,7 +18,7 @@ end to end, not diff-local. Your brief sets the mode.
 ## Rules for every mode
 
 - **Do not fix anything.** Do not change project files. The only file you write is your
-  report under `.crewsade/reports/`. Shell commands are for running checks, never for edits.
+  report in the `reports/` folder of your mission folder. Shell commands are for running checks, never for edits.
 - **Cite or it did not happen.** Every finding names a `file:line`, a command and its exit
   code, or the trace step that exposes it. Keep "the report says X" apart from "I checked X".
 - Style preferences are not findings when there is a real problem. Drop them.
@@ -47,7 +47,7 @@ Check one sub-task, or the whole mission in the final audit.
   - `auto` — run the command or test and record the result.
   - `inspect` — read the code and cite `file:line` for what satisfies it or breaks it.
   - `visual` — run the system, take a screenshot of each screen and supported screen size the
-    AC names, save them under `.crewsade/reports/screenshots/`, and judge them yourself:
+    AC names, save them under `reports/screenshots/` in your mission folder, and judge them yourself:
     layout, content, and every "must not appear" pattern. Cite the screenshot path. If the
     session has no way to run the system or take screenshots, mark it `NEEDS-HUMAN` and say
     why.

@@ -72,9 +72,9 @@ against the plan:
 
 | Agent (`subagent_type`) | Role | Writes | Parallel |
 | --- | --- | --- | --- |
-| `crewsade:scout` | Reads docs (Jira, Confluence, Markdown) and explores the codebase | `.crewsade/context/` only | yes |
+| `crewsade:scout` | Reads docs (Jira, Confluence, Markdown) and explores the codebase | `<mission>/context/` only | yes |
 | `crewsade:developer` | Writes and changes code with tests | code | no |
-| `crewsade:auditor` | Checks work against the DoD and the AC; reviews the plan before approval | `.crewsade/reports/` only | yes |
+| `crewsade:auditor` | Checks work against the DoD and the AC; reviews the plan before approval | `<mission>/reports/` only | yes |
 | `crewsade:worker` | Non-code work: docs, config, gathering information | files in its scope | no, if it writes |
 
 The developer and the auditor both load the `crewsade:proof` skill — the maker and the
@@ -133,7 +133,7 @@ How to dispatch:
   launch a workflow while a writer's is running, and never launch a second writer.** The result is a list of
   `{ role, job, subject, reply }`: `reply` is the agent's report in its own format, and
   `null` means the agent returned nothing — find out why (look
-  in `.crewsade/context/` for a scout, `.crewsade/reports/` for the others) before the next
+  in `<mission>/context/` for a scout, `<mission>/reports/` for the others) before the next
   step.
 - **Write every agent's label as `role · job · subject`**, in the user's language — the
   runner builds it from `job` and `subject`. The progress tree shows exactly this as the
@@ -173,8 +173,8 @@ Read `$ARGUMENTS`:
 | Argument | Go to |
 | --- | --- |
 | `init` | [init](#init) |
-| `status` | [status](#status) |
-| `resume` | [resume](#resume) |
+| `status [all]` | [status](#status) |
+| `resume [slug]` | [resume](#resume) |
 | `audit …` | [audit](#audit) |
 | `ship` | [ship](#ship) |
 | `abort` | [abort](#abort) |
@@ -186,14 +186,33 @@ Read `$ARGUMENTS`:
 ```
 .crewsade/
 ├── config.md    ← from init: DoD, test/lint/build commands, stack, paths not to touch
-├── standing.md  ← the user's standing instructions; outlives the mission (see Memory)
-├── plan.md      ← current mission: sub-tasks, status, AC, decision log
+├── project.md   ← from init: the scout's survey of the project
+├── standing.md  ← the user's standing instructions; outlives every mission (see Memory)
 ├── lessons.md   ← what went wrong on earlier missions, as rules (see Lessons)
-├── context/     ← full findings from scouts
-└── reports/     ← full reports from developer, worker and auditor
+└── missions/
+    └── 2026-10-18-payment-client/   ← one folder per mission: the mission folder
+        ├── plan.md   ← sub-tasks, status, AC, decision log
+        ├── context/  ← full findings from scouts
+        └── reports/  ← full reports from developer, worker and auditor
 ```
 
-Its shape is in [`references/plan-template.md`](references/plan-template.md).
+Above the line is the **project's**: every session may read it, and only `init`, the user's
+standing instructions and `Lessons` write it. Below it is **one mission's**.
+
+**Your mission folder** is `.crewsade/missions/<slug>/`, where `<slug>` is the date and a
+short kebab-case name (`2026-10-18-payment-client`). Several sessions can use the foreman in
+one project at once, so every session has its own folder:
+
+- Choose the slug at Intake, create the folder with its `plan.md` straight away, and write
+  its path in the plan's `Folder:` line and in every brief. Briefs, `plan.md`, `context/`
+  and `reports/` all live inside it. `<mission>` in this skill means this folder.
+- **Never read or write another mission's folder.** It belongs to another session, or to a
+  finished mission. Look inside one only when the user asks you to (`status all`, `resume`).
+- Never pick a mission folder by guessing from the listing ("the newest one", "the one in
+  progress"). Yours is the one you created, or the one the user named on `resume`. If you
+  have lost track of it, ask the user.
+
+The plan's shape is in [`references/plan-template.md`](references/plan-template.md).
 
 ## Memory that survives compaction
 
@@ -204,24 +223,28 @@ conversation: write it down the moment it exists.
 | What | Where | When |
 | --- | --- | --- |
 | The user's standing instructions — how to tell them things, what never to do, tools or language to use ("tell me with `say` when done", "never push without asking") | `.crewsade/standing.md`, one line each | the moment they say it, before acting on it |
-| The goal, sub-tasks, statuses and AC | `plan.md` | at plan time, then every step |
-| The step you are on and the one after it | `plan.md` `## Now` | every step, before you dispatch |
-| Facts the next step needs that no other file holds — why a choice was made, a path, a trap found mid-task | `plan.md` `## Notes` | when you learn them |
-| Decisions | `plan.md` decision log | when they are made |
+| Which folder is your mission's | `plan.md`'s `Folder:` line, and every brief | at Intake |
+| The goal, sub-tasks, statuses and AC | `<mission>/plan.md` | at plan time, then every step |
+| The step you are on and the one after it | `<mission>/plan.md` `## Now` | every step, before you dispatch |
+| Facts the next step needs that no other file holds — why a choice was made, a path, a trap found mid-task | `<mission>/plan.md` `## Notes` | when you learn them |
+| Decisions | `<mission>/plan.md` decision log | when they are made |
 
 - **standing.md outlives the mission.** It holds instructions, not mission state, so a new
   mission keeps it. When the user withdraws one ("stop using say"), delete that line.
 - **After a compaction** — the conversation opens with a summary, or you cannot recall the
-  detail of the step you are on — re-read `standing.md` and `plan.md` (Now, Notes, decision
-  log) before anything else, and follow `standing.md` as if the user had just said it. The
-  memory mod also puts both back into your context on the first prompt after a compaction.
+  detail of the step you are on — first name your mission folder: it is in the summary and in
+  the memory the mod puts back on your first prompt (`This session's mission folder is …`).
+  Then re-read `standing.md` and that folder's `plan.md` (Now, Notes, decision log) before
+  anything else, and follow `standing.md` as if the user had just said it. If you cannot
+  find your mission folder in either, stop and ask the user which it is; do not take another
+  session's.
 - `## Now` is two lines, not a diary: what is happening now, and what happens next.
 
 ## init
 
 1. Dispatch one scout to survey the project: stack, how to test, lint, build and type-check,
    CI config, `CLAUDE.md` / `AGENTS.md` / `CONTRIBUTING`, and anything that looks generated or
-   vendored. It writes `.crewsade/context/project.md`.
+   vendored. It writes `.crewsade/project.md`.
 2. From its summary, draft `.crewsade/config.md` using
    [`references/config-template.md`](references/config-template.md). Every command in it must
    have been run by the scout; mark any it could not run.
@@ -234,17 +257,22 @@ Running `init` again edits the existing config instead of starting over.
 
 ## Mission
 
-If `.crewsade/config.md` does not exist, run [init](#init) first. If `plan.md` holds a
-mission that is not `done` or `aborted`, ask whether to resume it or start a new one.
+If `.crewsade/config.md` does not exist, run [init](#init) first. A new mission always gets
+a new folder: never reuse or overwrite one, and never take over a mission another session
+started unless the user runs `resume` on it.
 
-1. **Intake.** Restate the mission in one or two lines.
+1. **Intake.** Restate the mission in one or two lines. Choose the slug, create
+   `.crewsade/missions/<slug>/` with a `plan.md` holding the `# Mission:` and `Folder:`
+   lines, and list the other folders under `.crewsade/missions/` whose `Status:` is not
+   `done` or `aborted`: if there are any, tell the user in one line each (title, status,
+   when `plan.md` last changed) — another session may be working in them.
 2. **Sources.** Take every ticket key, URL and path the task already names. Ask for sources
    only when it names none — as keys, URLs or paths, never pasted content.
 3. **Explore.** Dispatch scouts in parallel, each writing its full findings to
-   `.crewsade/context/` and returning a summary:
+   `<mission>/context/` and returning a summary:
    - **Always one baseline scout** — how the parts this mission touches behave today, which
      tests cover them, what work on this task already exists, and the result of every DoD
-     command before anything changes. It writes `.crewsade/context/baseline.md`. The plan is
+     command before anything changes. It writes `<mission>/context/baseline.md`. The plan is
      built on it, and the auditor measures against it: without a baseline, a test that was
      already failing reads as the developer's fault.
    - One scout per source (ticket, page, document) and per further area of the codebase, as
@@ -261,7 +289,10 @@ mission that is not `done` or `aborted`, ask whether to resume it or start a new
      the crew cannot reach.
 
    For UI work, write what must **not** appear as concrete patterns ("no pill buttons, no
-   cream background"), not general wishes ("not generic"). Write it all to `plan.md`.
+   cream background"), not general wishes ("not generic"). Write it all to `plan.md`, with a
+   `Scope:` line naming the paths the mission will change. If another open mission's
+   `Scope:` overlaps, stop and tell the user (case 2): two missions share one working tree,
+   so they would edit the same files.
 5. **Plan review.** Dispatch the auditor in plan-review mode. It asks what the plan cannot:
    whether a simpler way exists, and what the plan assumes that is not true. Revise what its
    `PROBLEMS` show; carry its `ALTERNATIVES` to the user rather than deciding them yourself.
@@ -313,19 +344,28 @@ Pushing, opening a PR and changing a ticket are the user's call. When they ask, 
 
 ## status
 
-Read `plan.md` and show every sub-task, its status and how many audit rounds failed.
-Dispatch nothing.
+Read your mission's `plan.md` and show every sub-task, its status and how many audit rounds
+failed. With `all`, list every folder under `.crewsade/missions/` instead: title, status and
+when its `plan.md` last changed. Dispatch nothing.
 
 ## resume
 
-Read `standing.md`, then `plan.md` — Now, Notes and the decision log — and continue from
-the first sub-task that is not done. The agents from before are gone: dispatch fresh ones, and point each brief at the
-reports that sub-task already has in `.crewsade/reports/`.
+`resume <slug>` continues that mission. Without a slug, list the open missions (`Status:` not
+`done` or `aborted`) with title, status and last change, and ask which — a decision that is
+the user's. If the chosen `plan.md` changed in the last ten minutes, another session is
+probably working in it: say so and confirm before taking it over.
+
+Then read `standing.md` and that folder's `plan.md` — Now, Notes and the decision log — and
+continue from the first sub-task that is not done. Start by writing the resume into
+`## Now`, so the mod knows this session's mission folder. The agents from before are gone:
+dispatch fresh ones, and point each brief at the reports that sub-task already has in
+`<mission>/reports/`.
 
 ## audit
 
 Dispatch the auditor over existing work — the current branch, or uncommitted changes —
-against the DoD and whatever AC the user gives. Without `config.md`, ask the user for the
+against the DoD and whatever AC the user gives. Its folder is
+`.crewsade/missions/<date>-audit-<topic>/`, holding only `reports/`. Without `config.md`, ask the user for the
 checks to run. Do not start a mission, and do not fix anything the audit finds unless the
 user asks.
 
@@ -368,7 +408,7 @@ replaced on every update.
 
 ## abort
 
-Stop the mission. Set its status in `plan.md` to `aborted`, and summarise what was done.
+Stop your mission, never another session's. Set its status in `<mission>/plan.md` to `aborted`, and summarise what was done.
 Do not revert any changes; that is the user's decision.
 
 ## When to use

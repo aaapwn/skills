@@ -7,11 +7,15 @@ section; write "none" rather than leaving one out.
 ## Goal
 What to do, and what it is for.
 
+## Mission folder
+.crewsade/missions/<YYYY-MM-DD-slug>/ — the only mission folder you read or write. Every
+other folder under .crewsade/missions/ belongs to another session: leave it alone.
+
 ## Read first
 - .crewsade/config.md
 - .crewsade/lessons.md (if it exists)
-- .crewsade/context/<files that matter for this sub-task>
-- .crewsade/reports/<earlier reports for this sub-task, if any>
+- <mission folder>/context/<files that matter for this sub-task>
+- <mission folder>/reports/<earlier reports for this sub-task, if any>
 
 ## Scope
 Files and modules to change. Paths not to touch (from config.md, plus any for this task).
@@ -26,7 +30,7 @@ Each AC of this sub-task, with its check: auto | inspect | visual | human.
 Every approved decision so far, from plan.md.
 
 ## Report
-Write the full report to .crewsade/reports/<sub-task id>-<agent>-<round>.md
+Write the full report to <mission folder>/reports/<sub-task id>-<agent>-<round>.md
 and reply in your agent's report format.
 ```
 
@@ -52,7 +56,7 @@ siblings and reports disagreements and unowned work. For a reference branch, it 
 Keep / Do not copy table.
 
 ## Output
-.crewsade/context/<topic>.md
+.crewsade/missions/<slug>/context/<topic>.md
 ```
 
 **For the baseline scout, use exactly these questions** (add mission-specific ones after):
@@ -69,7 +73,7 @@ Keep / Do not copy table.
    and `git rev-parse HEAD` first.
 
 ## Output
-.crewsade/context/baseline.md
+.crewsade/missions/<slug>/context/baseline.md
 ```
 
 **For an auditor plan review, use:**
@@ -79,12 +83,12 @@ Keep / Do not copy table.
 plan review
 
 ## Read first
-- .crewsade/plan.md
-- .crewsade/context/<all context files>
+- <mission folder>/plan.md
+- <mission folder>/context/<all context files>
 
 ## Original requirement
 The user's requirement as they gave it.
 
 ## Report
-.crewsade/reports/plan-review-<round>.md
+.crewsade/missions/<slug>/reports/plan-review-<round>.md
 ```

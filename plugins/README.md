@@ -68,9 +68,9 @@ foreman จะส่ง scout ไปสำรวจโปรเจกต์ ห�
 
 | Agent | หน้าที่ | เขียนไฟล์ | รันพร้อมกันได้ |
 | --- | --- | --- | --- |
-| `crewsade:scout` | อ่านเอกสาร (Jira, Confluence, Markdown) และสำรวจ codebase | เฉพาะ `.crewsade/context/` | ได้ |
+| `crewsade:scout` | อ่านเอกสาร (Jira, Confluence, Markdown) และสำรวจ codebase | เฉพาะ `context/` ของ mission | ได้ |
 | `crewsade:developer` | เขียนและแก้โค้ดพร้อมเทส | โค้ด | ไม่ได้ |
-| `crewsade:auditor` | ตรวจงานกับ DoD และ AC, รีวิวแผนก่อนอนุมัติ | เฉพาะ `.crewsade/reports/` | ได้ |
+| `crewsade:auditor` | ตรวจงานกับ DoD และ AC, รีวิวแผนก่อนอนุมัติ | เฉพาะ `reports/` ของ mission | ได้ |
 | `crewsade:worker` | งานที่ไม่ใช่โค้ด เช่น เอกสาร config รวบรวมข้อมูล | ไฟล์ใน scope | ไม่ได้ ถ้ามีการเขียนไฟล์ |
 
 หลักการที่ foreman ยึด:
@@ -182,12 +182,32 @@ agent ถามผู้ใช้เองไม่ได้ เลยใช้�
 ```
 .crewsade/
 ├── config.md    ← จาก init: DoD, คำสั่ง test/lint/build, stack, path ที่ห้ามแตะ
-├── plan.md      ← mission ปัจจุบัน: sub-task, สถานะ, AC, decision log
+├── project.md   ← จาก init: ผลสำรวจโปรเจกต์ของ scout
 ├── standing.md  ← คำสั่งที่คุณบอกให้ทำตลอด เช่น "บอกด้วย say เมื่อเสร็จ" อยู่ข้าม mission
 ├── lessons.md   ← บทเรียนจาก mission ก่อนๆ ทุก brief ให้อ่าน
-├── context/     ← ผลเต็มจาก scout
-└── reports/     ← report เต็มจาก developer, worker และ auditor
+└── missions/
+    └── 2026-10-18-payment-client/   ← โฟลเดอร์ของ mission หนึ่ง (mission folder)
+        ├── plan.md   ← sub-task, สถานะ, AC, decision log
+        ├── context/  ← ผลเต็มจาก scout
+        └── reports/  ← report เต็มจาก developer, worker และ auditor
 ```
+
+## หลาย session ในโปรเจกต์เดียวกัน
+
+ทุก mission มีโฟลเดอร์ของตัวเองใต้ `.crewsade/missions/<วันที่-ชื่อ>/` ใช้ foreman กี่ session ใน
+โปรเจกต์เดียวกันพร้อมกันก็ไม่ทับ `plan.md`, `context/`, `reports/` ของกัน
+
+- foreman ตั้งชื่อโฟลเดอร์ตอนรับงาน และเขียน path ลงบรรทัด `Folder:` ของ plan กับทุก brief
+- ไม่แตะโฟลเดอร์ของ mission อื่น และไม่เดาว่าอันไหนเป็นของตัวเอง ("อันล่าสุด" ไม่ใช่คำตอบ)
+- ตอนรับงาน foreman บอกว่ามี mission อื่นที่ยังเปิดอยู่หรือไม่ และถ้า `Scope:` ซ้ำกัน
+  จะหยุดถามคุณ เพราะทุก mission ใช้ working tree เดียวกัน
+- `resume <slug>` ทำต่อ mission ที่ระบุ ถ้าไม่ระบุจะแสดงรายการให้เลือก และถ้า `plan.md` ถูกแก้
+  ในรอบ 10 นาทีที่ผ่านมา จะเตือนว่าอาจมี session อื่นกำลังทำอยู่
+- `status all` ดูทุก mission ส่วน `status` และ `abort` ทำกับ mission ของ session นี้เท่านั้น
+
+**ข้อจำกัด:** ทุก mission ยังแก้ไฟล์ใน working tree เดียวกัน ถ้าสอง mission แก้ไฟล์เดียวกัน
+การแยกโฟลเดอร์ไม่ช่วย และ DoD ที่รันเทสทั้งชุดอาจเห็นงานที่ยังไม่เสร็จของ mission อื่น
+(baseline บันทึก `git status` ไว้ให้แยกออก)
 
 ตอน `init` จะมีคำถามว่าจะเพิ่ม `.crewsade/` ลง `.gitignore` หรือไม่ รวมอยู่ในการอนุมัติ config
 
@@ -220,14 +240,15 @@ session ยาวๆ จะถูกสรุปย่อ (compact) และอ
 | อะไร | เก็บที่ |
 | --- | --- |
 | คำสั่งที่คุณบอกให้ทำตลอด ("หลังจากนี้บอกด้วย say", "ห้าม push ก่อนถาม") | `.crewsade/standing.md` บรรทัดละข้อ จดก่อนทำตาม |
-| เป้าหมาย, sub-task, สถานะ, AC | `plan.md` |
+| mission folder ของ session นี้ | บรรทัด `Folder:` ใน `plan.md` และทุก brief |
+| เป้าหมาย, sub-task, สถานะ, AC | `plan.md` ใน mission folder |
 | ตอนนี้ทำอะไร และขั้นถัดไปคืออะไร | `plan.md` ส่วน `## Now` |
 | สิ่งที่ต้องรู้ที่ไม่อยู่ในไฟล์อื่น (เหตุผล, path, กับดักที่เจอกลางทาง) | `plan.md` ส่วน `## Notes` |
 | การตัดสินใจ | decision log ใน `plan.md` |
 
 - `standing.md` อยู่ข้าม mission เพราะเป็นคำสั่ง ไม่ใช่สถานะงาน ถ้าบอกให้เลิก เช่น "เลิกใช้ say"
   foreman จะลบบรรทัดนั้นออก
-- **หลัง compact** foreman จะอ่าน `standing.md` กับ `plan.md` ใหม่ก่อนทำอะไรต่อ และ mod
+- **หลัง compact** foreman จะบอก mission folder ของตัวเองก่อน แล้วอ่าน `standing.md` กับ `plan.md` ของโฟลเดอร์นั้นใหม่ก่อนทำอะไรต่อ ถ้าหา folder ไม่เจอจะถามคุณ ไม่หยิบของ session อื่น และ mod
   ช่วยอีก 2 ชั้น: ตอน compact จะบอกตัวสรุปให้เก็บสถานะ mission ไว้ และพอคุณพิมพ์ข้อความแรก
   หลัง compact จะใส่คำสั่งใน `standing.md` กับส่วน Now / Notes ของ plan กลับเข้า context ให้เอง
   (ใส่เฉพาะหลัง compact ไม่ใส่ตอนเปิด session ใหม่ เพื่อไม่ให้ session อื่นใน repo เดียวกัน
@@ -236,14 +257,18 @@ session ยาวๆ จะถูกสรุปย่อ (compact) และอ
 ## mod ความจำหลัง compact
 
 crewsade มี mod เล็กๆ ตัวเดียว ทำหน้าที่ข้างบนเท่านั้น (เคยมีแถบเหนือช่องพิมพ์ หน้าต่าง Tasks
-และ Log แต่เอาออกแล้ว เพราะทุก session ใน repo เดียวกันอ่านไฟล์ `.crewsade/` ชุดเดียวกัน
-จึงโชว์ของ session อื่นและเขียน log ทับกัน)
+และ Log แต่เอาออกแล้ว เพราะอ่านไฟล์ชุดเดียวกันทุก session จึงโชว์ของ session อื่นและเขียน log ทับกัน)
 
 ต้องใช้ Claude Code ที่รองรับ mod mod รันในเครื่องด้วยสิทธิ์ของคุณและไม่ได้อยู่ใน sandbox ตัวนี้:
 
-- **อ่าน** `.crewsade/plan.md` และ `.crewsade/standing.md` เฉพาะตอนข้อความแรกหลัง compact
+- **จำ mission folder ของ session นี้** จากไฟล์ใน `.crewsade/missions/<slug>/` ที่ foreman
+  เขียนเอง (ไม่นับที่ agent เขียน) เก็บไว้ใน state ของ session ไม่ใช่ตัวแปรในโมดูล
+  จึงไม่ปนกับ session อื่นและไม่หายตอน reload
+- **ตอน compact** เติมข้อความให้ตัวสรุปเก็บสถานะ mission และเขียน path ของ mission folder
+  ตรงตัว พร้อมบอกว่าโฟลเดอร์อื่นใต้ `.crewsade/missions/` เป็นของ session อื่น
+- **อ่าน** `.crewsade/standing.md` กับ `plan.md` ของ mission folder นั้น เฉพาะตอนข้อความแรกหลัง compact
+  แล้วใส่กลับเข้า context พร้อมประโยค "This session's mission folder is …"
 - **ไม่เขียนไฟล์ใดเลย**
-- **ตอน compact** เติมข้อความสั้นๆ ให้ตัวสรุปเก็บสถานะ mission
 - ไม่รันคำสั่ง ไม่ต่อเน็ต ไม่เรียก model
 
 ดูรายการทั้งหมดที่ mod เรียกใช้ได้ด้วย `claude plugin validate ./plugins/claude/crewsade`

@@ -1,10 +1,12 @@
-# .crewsade/plan.md template
+# <mission folder>/plan.md template
 
 ```markdown
 # Mission: <one line>
+Folder: .crewsade/missions/<YYYY-MM-DD-slug>
 Status: planning | approved | in-progress | done | aborted
 Started: <date>
 Done when: <one sentence: the observable state that ends the mission>
+Scope: <paths this mission will change, comma-separated>
 
 ## Requirement
 <the user's words, or the ticket keys / URLs / paths>

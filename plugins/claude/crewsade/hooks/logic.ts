@@ -18,6 +18,18 @@ export function parsePlan(text: string): Plan | null {
   return { title, status: status.toLowerCase(), doneWhen: doneWhen && !doneWhen.startsWith('<') ? doneWhen : null }
 }
 
+// ---- Which mission is this session's ----
+
+// Every mission lives in its own folder, so sessions in one project never share a plan
+export const MISSIONS = '.crewsade/missions'
+
+export const missionDir = (slug: string) => `${MISSIONS}/${slug}`
+
+// The slug of the mission folder a path sits in (absolute or relative), or null
+export function missionOf(path: string): string | null {
+  return path.match(/(?:^|\/)\.crewsade\/missions\/([^/]+)\//)?.[1] ?? null
+}
+
 // ---- Memory after a compaction ----
 
 // The body of a `## <heading>` section, up to the next `## `, or null when it is absent
@@ -34,8 +46,9 @@ export function sectionOf(text: string, heading: string): string | null {
 }
 
 // What goes back into the model's context after the conversation is summarised: the
-// user's standing instructions, and where the mission stands. Null when there is none.
-export function memoryContext(standing: string | null, planText: string | null): string | null {
+// user's standing instructions, which mission folder is this session's, and where that
+// mission stands. Null when there is none of it.
+export function memoryContext(standing: string | null, planText: string | null, slug: string | null): string | null {
   const rules = standing
     ?.split('\n')
     .map(line => line.trim())
@@ -43,18 +56,26 @@ export function memoryContext(standing: string | null, planText: string | null):
     .join('\n')
   const plan = planText ? parsePlan(planText) : null
   const isActive = plan !== null && plan.status !== 'done' && plan.status !== 'aborted'
-  if (!rules && !isActive) return null
+  if (!rules && !slug) return null
 
   const out = ['crewsade memory, put back after the conversation was summarised. Treat it as current.']
   if (rules) out.push('', 'Standing instructions from the user (.crewsade/standing.md) — follow them:', rules)
-  if (isActive && plan && planText) {
-    out.push('', `Mission: ${plan.title} (${plan.status})`)
-    if (plan.doneWhen) out.push(`Done when: ${plan.doneWhen}`)
-    const now = sectionOf(planText, 'Now')
-    if (now) out.push('', 'Now:', now)
-    const notes = sectionOf(planText, 'Notes')
-    if (notes) out.push('', 'Notes:', notes)
-    out.push('', 'Sub-tasks, AC and the decision log are in .crewsade/plan.md — read it before the next step.')
+  if (slug) {
+    const dir = missionDir(slug)
+    out.push(
+      '',
+      `This session's mission folder is ${dir}/ — its plan.md, context/ and reports/ are this session's mission.`,
+      `Every other folder under ${MISSIONS}/ belongs to another session: never read or write them.`,
+    )
+    if (isActive && plan && planText) {
+      out.push('', `Mission: ${plan.title} (${plan.status})`)
+      if (plan.doneWhen) out.push(`Done when: ${plan.doneWhen}`)
+      const now = sectionOf(planText, 'Now')
+      if (now) out.push('', 'Now:', now)
+      const notes = sectionOf(planText, 'Notes')
+      if (notes) out.push('', 'Notes:', notes)
+      out.push('', `Sub-tasks, AC and the decision log are in ${dir}/plan.md — read it before the next step.`)
+    }
   }
   return out.join('\n')
 }
@@ -63,3 +84,13 @@ export function memoryContext(standing: string | null, planText: string | null):
 export const COMPACT_INSTRUCTIONS =
   'Keep the crewsade mission state: the goal, the sub-task in hand and what comes next, ' +
   'every standing instruction the user gave (also in .crewsade/standing.md), and open questions.'
+
+// The same, naming this session's mission folder when it is known, so the summary keeps
+// the exact path and says the other folders are other sessions'
+export function compactInstructions(slug: string | null): string {
+  if (!slug) return COMPACT_INSTRUCTIONS
+  return (
+    `${COMPACT_INSTRUCTIONS} This session's mission folder is ${missionDir(slug)}/: write that exact ` +
+    `path in the summary, and say that every other folder under ${MISSIONS}/ belongs to another session.`
+  )
+}
