@@ -59,7 +59,10 @@ A message that arrives while the crew is working is a change, not an interruptio
 against the plan:
 
 - It adds information or a preference inside the approved scope: log it in the decision log,
-  pass it to the agent that is working (via `SendMessage`) or to the next brief, and carry on.
+  put it in the next brief, and carry on. An agent already inside a running workflow cannot
+  be messaged: if the change cannot wait for that step, stop the workflow (`TaskStop`) and
+  relaunch the step with the new brief — a stopped writer leaves a half-edited tree, so
+  say so in that brief.
 - It changes an approved AC, the *Done when* line or the scope: update `plan.md`, say what
   changed and which finished sub-tasks it affects, and get approval for that change only —
   this is case 2 above.
@@ -80,10 +83,62 @@ and the auditor `scrutinize`, when those skills are installed.
 
 How to dispatch:
 
-- **Write every Agent call's `description` as `role · job · subject`**, in the user's
-  language. The band above the prompt shows exactly this as the agent's work — it never
-  guesses from tool calls — so the job says what the agent was given to do and the subject
-  names the sub-task or source:
+- **Run the crew through the Workflow tool, not bare Agent calls.** Each step that needs
+  crew is one workflow, so the user watches it in the progress tree — phases, agents, what
+  each is doing — without turning on ultracode. `/crewsade:foreman` is the user invoking a
+  skill whose instructions tell you to call Workflow: that is the opt-in the tool asks for,
+  so do not wait for ultracode or ask first. Launch the bundled runner, found under this
+  skill's base directory:
+
+  ```
+  Workflow({
+    scriptPath: "<base directory>/scripts/crew-run.js",
+    args: {
+      phase: "ตรวจงาน",
+      agents: [{ role: "auditor", job: "ตรวจงานที่ developer แก้มา", subject: "ย้าย capture endpoint", brief: "<the full brief text>" }]
+    }
+  })
+  ```
+
+  `args` is a JSON object, not a string.
+
+  The tool loads a `scriptPath` only from a place it can already read. If it refuses the
+  path, Read `crew-run.js` and pass its whole text as `script` instead — same `args`.
+
+  - `phase` — the step's title in the tree: `สำรวจ`, `รีวิวแผน`, `เขียนโค้ด`, `ตรวจงาน`,
+    `ตรวจรวม`.
+  - `agents` — `role` is `scout`, `developer`, `auditor` or `worker`. `job` and `subject`
+    form the label (below). `brief` is the full brief from
+    [`references/brief-template.md`](references/brief-template.md), sent as the agent's
+    prompt. The runner refuses two agents that write files in one workflow.
+
+  One workflow per step of a mission, because you decide between steps:
+
+  | Mission step | Workflow |
+  | --- | --- |
+  | init 1, Mission 3 | `สำรวจ` — the scouts, `parallel` |
+  | Mission 5 | `รีวิวแผน` — one auditor in plan-review mode |
+  | Mission 7.1 | `เขียนโค้ด` — one developer, or one worker |
+  | Mission 7.3 | `ตรวจงาน` — one auditor |
+  | Mission 8 | `ตรวจรวม` — one auditor |
+  | `audit` | `ตรวจงาน` — one auditor |
+
+  The developer and its auditor are separate workflows because step 7.2 sits between them:
+  you read `ASSUMPTIONS` and check `git status --short` before anyone audits.
+
+  The workflow runs in the background and its replies arrive in a task notification when it
+  ends — end your turn after launching it; do not poll, and waiting for it is not a stop
+  case. Write its task ID under `plan.md` `## Now` so a foreman after a compaction does not
+  launch a second one. A read-only workflow may overlap another read-only one; **never
+  launch a workflow while a writer's is running, and never launch a second writer.** The result is a list of
+  `{ role, job, subject, reply }`: `reply` is the agent's report in its own format, and
+  `null` means the agent returned nothing — find out why (look
+  in `.crewsade/context/` for a scout, `.crewsade/reports/` for the others) before the next
+  step.
+- **Write every agent's label as `role · job · subject`**, in the user's language — the
+  runner builds it from `job` and `subject`. The progress tree shows exactly this as the
+  agent's work, so the job
+  says what the agent was given to do and the subject names the sub-task or source:
 
   | Agent | Jobs |
   | --- | --- |
@@ -94,17 +149,17 @@ How to dispatch:
 
   For example `auditor · ตรวจงานที่ developer แก้มา · ย้าย capture endpoint`, or
   `scout · อ่าน ticket · LMP-1234`.
-- **When `SendMessage` gives an agent new work, write its `summary` the same way** —
-  `developer · แก้ตามผลตรวจ (2 ข้อ) · ย้าย capture endpoint` — so the band shows the new
-  job instead of the old one. A summary in any other shape leaves the band as it was.
-
-- **An agent that needs MCP tools (Jira, Confluence) must run in the foreground**
-  (`run_in_background: false`). Background subagents lose MCP tools. To run several scouts
-  in parallel, send the Agent calls in one message.
-- **Resume an agent with `SendMessage`** (its agent ID) when you need it to continue — to
-  answer its questions, or to fix what the auditor failed. It keeps everything it already
-  read. Dispatch a fresh agent only when the old one is gone (a new session, a `resume`);
-  then the brief carries the answers and the path of the earlier report.
+- **An agent in a workflow ends with it and cannot be messaged.** To continue — answer its
+  `needs-input` questions, or fix what the auditor failed — launch a new workflow with a
+  fresh agent whose brief carries the answers or the must-fix items and lists the earlier
+  reports under *Read first*. The fresh agent starts without what the old one had read, so
+  the brief must name the files that matter.
+- **Fall back to Agent calls** only when the Workflow tool is not available, or when a
+  scout cannot reach an MCP server (Jira, Confluence) from inside a workflow — rerun that
+  scout as a foreground Agent call (`run_in_background: false`; background subagents lose
+  MCP tools). Write the call's `description` as `role · job · subject`, send several in one
+  message to run them in parallel, and resume such an agent with `SendMessage` (its agent
+  ID) — with its `summary` in the same shape, so the new job reads clearly in the transcript.
 - **An agent's report is a claim, not a result.** Before relying on it, check what is cheap
   to check yourself: `git status --short` against its `CHANGED`, one `file:line` it cites.
   The auditor does the full check; you do not re-read the whole diff.
@@ -134,7 +189,6 @@ Read `$ARGUMENTS`:
 ├── standing.md  ← the user's standing instructions; outlives the mission (see Memory)
 ├── plan.md      ← current mission: sub-tasks, status, AC, decision log
 ├── lessons.md   ← what went wrong on earlier missions, as rules (see Lessons)
-├── log.jsonl    ← the mission's history, written by the status mod (do not edit)
 ├── context/     ← full findings from scouts
 └── reports/     ← full reports from developer, worker and auditor
 ```
@@ -160,7 +214,7 @@ conversation: write it down the moment it exists.
 - **After a compaction** — the conversation opens with a summary, or you cannot recall the
   detail of the step you are on — re-read `standing.md` and `plan.md` (Now, Notes, decision
   log) before anything else, and follow `standing.md` as if the user had just said it. The
-  status mod also puts both back into your context on the first prompt after a compaction.
+  memory mod also puts both back into your context on the first prompt after a compaction.
 - `## Now` is two lines, not a diary: what is happening now, and what happens next.
 
 ## init
@@ -214,15 +268,16 @@ mission that is not `done` or `aborted`, ask whether to resume it or start a new
 6. **Approve.** Show the *Done when* line, the plan, the AC and the review's alternatives.
    Wait for the user's approval before any code changes. From here, run to handover.
 7. **Build and check,** one sub-task at a time:
-   1. Dispatch the developer (or the worker for non-code work) with a brief from
-      [`references/brief-template.md`](references/brief-template.md).
-   2. Read its `ASSUMPTIONS`. Send back any that are wrong before the audit; log the right
-      ones in the decision log.
-   3. Dispatch the auditor with the sub-task's DoD and AC, **the user's original
-      requirement**, and `baseline.md`.
+   1. Launch a `เขียนโค้ด` workflow for the developer (or the worker for non-code work),
+      with a brief from [`references/brief-template.md`](references/brief-template.md).
+   2. Read its `ASSUMPTIONS`. Any that are wrong go back in a new `เขียนโค้ด` workflow before the audit (not a
+      failed round); log the right ones in the decision log.
+   3. Launch a `ตรวจงาน` workflow for the auditor with the sub-task's DoD and AC, **the
+      user's original requirement**, and `baseline.md`.
    4. On `FAIL`, **triage the `FIX` list** into must fix / optional / disagree, as
-      [`references/report-format.md`](references/report-format.md) describes. Resume the
-      developer with the must-fix items only, then audit again. **After two failed rounds,
+      [`references/report-format.md`](references/report-format.md) describes. Launch a
+      new `เขียนโค้ด` workflow with the must-fix items only — a fresh developer, its brief
+      listing the earlier reports — then audit again. **After two failed rounds,
       stop and bring it to the user.**
    5. On `PASS`, commit if the config's commit policy says so — stage the paths in
       `CHANGED` explicitly, never `git add -A` — mark the sub-task done, and move on.
@@ -253,7 +308,8 @@ Pushing, opening a PR and changing a ticket are the user's call. When they ask, 
   first: dispatch a scout, or check it yourself if it is one command. The usual trap: the
   thing exists, but under a different version, profile or environment than this project
   uses. Report what you found and re-ask the narrowed question.
-- Then log the answer and resume the agent with it.
+- Then log the answer and continue: launch a new workflow whose brief carries it (resume
+  with `SendMessage` only an agent you dispatched as a fallback Agent call).
 
 ## status
 
