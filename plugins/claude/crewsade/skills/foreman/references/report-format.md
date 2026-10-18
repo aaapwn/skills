@@ -43,7 +43,9 @@ remains, and `PASS` only when every item passes.
 - Check `CHANGED` against the brief's scope with `git status --short`. A file outside scope
   goes back to the agent or to the user — never quietly into a commit.
 - Every item in `ASSUMPTIONS` is either confirmed into the decision log or sent back.
-- Triage every `FIX` item before it goes back to the developer:
+- Triage every `FIX` item before it goes back to the developer (`build-check.js` does this
+  for you: its fix-round brief tells the developer to apply the rules below, and you check
+  the outcome afterwards):
   - **must fix** — it names a failure you can reproduce or a DoD/AC it breaks. Send it.
   - **optional** — real but not blocking, or no reproducible failure. Log it; do not send.
   - **disagree** — it contradicts the decision log or the approved plan. Take it to the user;

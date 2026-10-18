@@ -112,29 +112,48 @@ How to dispatch:
     [`references/brief-template.md`](references/brief-template.md), sent as the agent's
     prompt. The runner refuses two agents that write files in one workflow.
 
-  One workflow per step of a mission, because you decide between steps:
+  Two runners, by what the step is:
 
-  | Mission step | Workflow |
+  | Mission step | Runner and phases |
   | --- | --- |
-  | init 1, Mission 3 | `สำรวจ` — the scouts, `parallel` |
-  | Mission 5 | `รีวิวแผน` — one auditor in plan-review mode |
-  | Mission 7.1 | `เขียนโค้ด` — one developer, or one worker |
-  | Mission 7.3 | `ตรวจงาน` — one auditor |
-  | Mission 8 | `ตรวจรวม` — one auditor |
-  | `audit` | `ตรวจงาน` — one auditor |
+  | init 1, Mission 3 | `crew-run.js` — `สำรวจ`, the scouts together |
+  | Mission 5 | `crew-run.js` — `รีวิวแผน`, one auditor in plan-review mode |
+  | Mission 7, one sub-task | `build-check.js` — the whole cycle, below |
+  | Mission 8 | `crew-run.js` — `ตรวจรวม`, one auditor |
+  | `audit` | `crew-run.js` — `ตรวจงาน`, one auditor |
 
-  The developer and its auditor are separate workflows because step 7.2 sits between them:
-  you read `ASSUMPTIONS` and check `git status --short` before anyone audits.
+  **`build-check.js` runs a whole sub-task as one workflow**, so the user watches it in one
+  place instead of four silent steps: `เขียนโค้ด` → `ตรวจงาน · รอบ 1` → on `FAIL`
+  `แก้ตามผลตรวจ · รอบ 1` → `ตรวจงาน · รอบ 2`, with every round's verdict and `FIX` titles
+  logged above the tree. Launch it the same way as `crew-run.js`:
+
+  ```
+  Workflow({
+    scriptPath: "<base directory>/scripts/build-check.js",
+    args: {
+      id: "2", subject: "ย้าย capture endpoint", reportDir: ".crewsade/missions/<slug>/reports",
+      maker: { role: "developer", brief: "<the developer's full brief>" },
+      auditor: { brief: "<the auditor's full brief>" }
+    }
+  })
+  ```
+
+  `maker.role` is `developer` (default) or `worker`. Both briefs are the round-1 briefs; the
+  script adds each fix round's `FIX` items and report paths itself. It stops after two
+  failed audits (`maxFailedRounds`, default 2).
 
   The workflow runs in the background and its replies arrive in a task notification when it
   ends — end your turn after launching it; do not poll, and waiting for it is not a stop
   case. Write its task ID under `plan.md` `## Now` so a foreman after a compaction does not
   launch a second one. A read-only workflow may overlap another read-only one; **never
-  launch a workflow while a writer's is running, and never launch a second writer.** The result is a list of
-  `{ role, job, subject, reply }`: `reply` is the agent's report in its own format, and
-  `null` means the agent returned nothing — find out why (look
+  launch a workflow while a writer's is running, and never launch a second writer.**
+  While it runs, tell the user in one line which workflow is running and what it will do
+  (it shows under Background tasks), and say nothing more until it ends.
+
+  A `crew-run.js` result is a list of `{ role, job, subject, reply }`: `reply` is the agent's
+  report in its own format, and `null` means the agent returned nothing — find out why (look
   in `<mission>/context/` for a scout, `<mission>/reports/` for the others) before the next
-  step.
+  step. A `build-check.js` result is `{ outcome, rounds }`, read in step 7.
 - **Write every agent's label as `role · job · subject`**, in the user's language — the
   runner builds it from `job` and `subject`. The progress tree shows exactly this as the
   agent's work, so the job
@@ -149,8 +168,9 @@ How to dispatch:
 
   For example `auditor · ตรวจงานที่ developer แก้มา · ย้าย capture endpoint`, or
   `scout · อ่าน ticket · LMP-1234`.
-- **An agent in a workflow ends with it and cannot be messaged.** To continue — answer its
-  `needs-input` questions, or fix what the auditor failed — launch a new workflow with a
+- **An agent in a workflow ends with it and cannot be messaged.** To continue after it ends —
+  answer its `needs-input` questions, say — launch a new workflow (fix rounds after a failed
+  audit need none: `build-check.js` runs them inside one workflow) with a
   fresh agent whose brief carries the answers or the must-fix items and lists the earlier
   reports under *Read first*. The fresh agent starts without what the old one had read, so
   the brief must name the files that matter.
@@ -299,19 +319,27 @@ started unless the user runs `resume` on it.
 6. **Approve.** Show the *Done when* line, the plan, the AC and the review's alternatives.
    Wait for the user's approval before any code changes. From here, run to handover.
 7. **Build and check,** one sub-task at a time:
-   1. Launch a `เขียนโค้ด` workflow for the developer (or the worker for non-code work),
-      with a brief from [`references/brief-template.md`](references/brief-template.md).
-   2. Read its `ASSUMPTIONS`. Any that are wrong go back in a new `เขียนโค้ด` workflow before the audit (not a
-      failed round); log the right ones in the decision log.
-   3. Launch a `ตรวจงาน` workflow for the auditor with the sub-task's DoD and AC, **the
-      user's original requirement**, and `baseline.md`.
-   4. On `FAIL`, **triage the `FIX` list** into must fix / optional / disagree, as
-      [`references/report-format.md`](references/report-format.md) describes. Launch a
-      new `เขียนโค้ด` workflow with the must-fix items only — a fresh developer, its brief
-      listing the earlier reports — then audit again. **After two failed rounds,
-      stop and bring it to the user.**
-   5. On `PASS`, commit if the config's commit policy says so — stage the paths in
-      `CHANGED` explicitly, never `git add -A` — mark the sub-task done, and move on.
+   1. Write the developer's brief (or the worker's, for non-code work) and the auditor's —
+      the sub-task's DoD and AC, **the user's original requirement**, and `baseline.md` —
+      from [`references/brief-template.md`](references/brief-template.md), then launch one
+      `build-check.js` workflow with both.
+   2. Read its `outcome` and each round's replies:
+      - `pass` — check `git status --short` against the `CHANGED` of the last developer
+        reply, and read every `ASSUMPTIONS` in the rounds: log the right ones in the
+        decision log. A wrong one goes back as a new `build-check.js` run whose brief says
+        what is wrong. Then commit if the config's commit policy says so — stage the paths
+        in `CHANGED` explicitly, never `git add -A` — mark the sub-task done, and move on.
+      - `needs-human` — as `pass`, and carry the `NEEDS-HUMAN` items to the handover.
+      - `stuck` — two failed audits: **stop and bring it to the user** with each round's
+        `FIX` list.
+      - `maker-stopped` — the developer ended `partial` or `needs-input`. Read why: answer
+        from the plan and the decision log if you can, else ask the user (a fix round that
+        stopped on a `FIX` that contradicts the decision log is the `disagree` case of
+        [`references/report-format.md`](references/report-format.md)). Then launch a new
+        `build-check.js` whose brief carries the answer.
+      - `silent` — an agent returned nothing: find out why before anything else.
+   3. The developer triages `FIX` items itself, as its fix-round brief says. When you read
+      the rounds, check it did not leave a real failure unfixed under `ASSUMPTIONS`.
 8. **Final audit.** When every sub-task is done, dispatch the auditor over the whole mission:
    the mission's *Done when* line, the DoD and every AC again, against the combined change
    **and against the running system** wherever the project can be run — per-sub-task checks

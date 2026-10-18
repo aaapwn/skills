@@ -128,21 +128,26 @@ mission ที่มี sub-task เดียวและเล็ก ข้า�
 ความคืบหน้าเป็น progress tree (phase, agent, สิ่งที่แต่ละตัวทำ) **โดยไม่ต้องเปิดโหมด ultracode**
 เพราะการเรียก `/crewsade:foreman` คือผู้ใช้เรียก skill ที่คำสั่งในตัวสั่งให้ใช้ Workflow อยู่แล้ว
 
-foreman เปิดสคริปต์ที่มากับ plugin (`skills/foreman/scripts/crew-run.js`) ครั้งละหนึ่ง workflow ต่อหนึ่งขั้นของ mission:
+foreman เปิดสคริปต์ที่มากับ plugin (`skills/foreman/scripts/`) สองตัว:
 
-| ขั้น | workflow |
-| --- | --- |
-| สำรวจ (init, Mission 3) | scout หลายตัวพร้อมกัน |
-| รีวิวแผน | auditor ตัวเดียว (plan review) |
-| เขียนโค้ด | developer หรือ worker ตัวเดียว |
-| ตรวจงาน / ตรวจรวม | auditor ตัวเดียว |
+| ขั้น | สคริปต์ | phase ที่เห็นใน progress tree |
+| --- | --- | --- |
+| สำรวจ (init, Mission 3) | `crew-run.js` | `สำรวจ` — scout หลายตัวพร้อมกัน |
+| รีวิวแผน | `crew-run.js` | `รีวิวแผน` — auditor ตัวเดียว |
+| **ทำ 1 sub-task** | `build-check.js` | `เขียนโค้ด` → `ตรวจงาน · รอบ 1` → (ถ้าไม่ผ่าน) `แก้ตามผลตรวจ · รอบ 1` → `ตรวจงาน · รอบ 2` |
+| ตรวจรวม | `crew-run.js` | `ตรวจรวม` — auditor ตัวเดียว |
 
-- developer กับ auditor แยก workflow กัน เพราะ foreman ต้องอ่าน `ASSUMPTIONS` และเช็ค
-  `git status` คั่นกลางก่อนตรวจ
+`build-check.js` รันทั้งวงจรของ sub-task เป็น workflow เดียว เขียนผลแต่ละรอบ (ผ่าน/ไม่ผ่าน กี่ข้อ
+ชื่อข้อที่ติด) ไว้เหนือ tree จึงเห็นทั้งหมดในที่เดียว ไม่ต้องรอ foreman เล่าในแชท ตรวจไม่ผ่านครบ
+2 รอบจะหยุดให้ foreman ถามคุณ
+
+- ระหว่าง maker กับ auditor ไม่มี foreman คั่นแล้ว: foreman อ่าน `ASSUMPTIONS` และเช็ค `git status`
+  หลังจบ workflow และ developer เป็นคนคัดข้อ FIX เองตาม brief (ทำข้อที่ทำซ้ำได้ ข้อที่ขัด decision
+  log จะหยุดด้วย `needs-input`)
 - สคริปต์ปฏิเสธการรัน agent ที่เขียนไฟล์ 2 ตัวใน workflow เดียว และ foreman ไม่เปิด workflow
   ใหม่ระหว่างที่ writer ยังรันอยู่ (จด task ID ไว้ใน `plan.md` ส่วน Now กันหลุดหลัง compact)
 - ถ้า tool ไม่ยอมโหลดสคริปต์จาก path ของ plugin foreman จะอ่านไฟล์แล้วส่งเนื้อหาเป็น `script` แทน
-- agent ใน workflow จบพร้อม workflow แล้วส่งข้อความหาไม่ได้ ถ้าต้องทำต่อ (ตอบคำถาม, แก้ตามผลตรวจ)
+- agent ใน workflow จบพร้อม workflow แล้วส่งข้อความหาไม่ได้ ถ้าต้องทำต่อหลังจบ (ตอบคำถามที่ agent ถาม)
   foreman เปิด workflow ใหม่ด้วย agent ตัวใหม่ที่ brief ระบุ report เดิมให้อ่าน
 - ถ้าไม่มีเครื่องมือ Workflow หรือ scout เข้า MCP (Jira, Confluence) จากใน workflow ไม่ได้
   foreman จะถอยกลับไปเรียก Agent แบบเดิมเฉพาะตัวนั้น
